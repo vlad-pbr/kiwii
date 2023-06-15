@@ -5,9 +5,6 @@ description = "Home IOT ecosystem made easy."
 license = "Unlicense"
 authors = ["Vlad Poberezhny <vlad.pbr@gmail.com>"]
 readme = "README.md"
-packages = [
-    { include = "kiwii" }
-]
 
 [tool.poetry.scripts]
 kiwii = "kiwii:cli"

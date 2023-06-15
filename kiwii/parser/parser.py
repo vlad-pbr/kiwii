@@ -7,10 +7,10 @@ from kiwii.parser.consts import KIWII_ARGPARSE_ARCHITECTURE_ARGUMENT, KIWII_ARGP
 from kiwii.shared.argparse_utils import to_flag, to_destination, ARGPARSE_STORE_TRUE_ACTION
 
 
-def parse(description: str, version: str):
+def parse(file: str, description: str, version: str):
 
     parser = ArgumentParser(
-        prog=__file__,
+        prog=file,
         description=description,
     )
 
