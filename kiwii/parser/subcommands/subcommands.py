@@ -1,7 +1,7 @@
 from typing import Dict, Callable, List
 
-from kiwii.subcommands import client, server, agent
-from kiwii.models import Subcommand
+from kiwii.architecture import client, server, agent
+from kiwii.shared.models import Subcommand
 
 SUBCOMMAND_CLIENT = Subcommand(
     name="client",
@@ -21,5 +21,3 @@ SUBCOMMAND_TO_CLI: Dict[str, Callable[[List[str]], None]] = {
     SUBCOMMAND_SERVER.name: server.cli,
     SUBCOMMAND_AGENT.name: agent.cli
 }
-
-ARGPARSE_SUBCOMMAND: str = "subcommand"

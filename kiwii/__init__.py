@@ -1,1 +1,1 @@
-from .kiwii import cli
+from .kiwii import cli, __version__
