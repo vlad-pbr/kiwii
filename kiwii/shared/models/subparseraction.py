@@ -2,6 +2,6 @@ from dataclasses import dataclass
 
 
 @dataclass
-class Subcommand:
-    name: str
+class SubparserAction:
+    dest: str
     help: str

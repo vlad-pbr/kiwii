@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 from typing import List
 
 
-def cli(args: List[str]):
+def parse(args: List[str]):
 
     parser = ArgumentParser()
 
