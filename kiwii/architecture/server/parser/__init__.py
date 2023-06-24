@@ -1,2 +1,2 @@
 from .parser import parse
-from .consts import SUBCOMMAND_START, SUBPARSERACTION_ACTION
+from .consts import SUBPARSER_START, SUBPARSERACTION_ACTION
