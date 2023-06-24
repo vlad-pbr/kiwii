@@ -11,12 +11,12 @@ COPY poetry.requirements.txt ./
 RUN python -m pip install --user --no-warn-script-location -r poetry.requirements.txt
 
 # install kiwii and dependencies
-COPY pyproject.toml poetry.toml poetry.lock README.md ./
+COPY pyproject.toml poetry.lock README.md ./
 COPY kiwii kiwii
 RUN true \
     && python -m poetry install -vvv --no-root --only main \
     && python -m poetry build -vvv \
-    && ./.venv/bin/python -m pip install dist/*.whl
+    && python -m poetry run python -m pip install dist/*.whl
 
 
 # prepare production image
