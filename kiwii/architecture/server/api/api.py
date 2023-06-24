@@ -9,7 +9,7 @@ _handlers: Dict[str, Dict[str, Callable[[Tuple], Tuple[HTTPStatus, str]]]] = {}
 def register(method: HTTPMethod, path: str) -> Callable[[Callable], Callable[[Tuple], Tuple[HTTPStatus, str]]]:
     strmethod = str(method)
 
-    def _inner(handler: Callable[[], Tuple[HTTPStatus, str]]) -> Callable[[Tuple], Tuple[HTTPStatus, str]]:
+    def _inner(handler: Callable[[Tuple], Tuple[HTTPStatus, str]]) -> Callable[[Tuple], Tuple[HTTPStatus, str]]:
         if strmethod not in _handlers:
             _handlers[strmethod]: Dict[str, Callable[[Tuple], Tuple[HTTPStatus, str]]] = {}
         _handlers[strmethod][path] = handler
