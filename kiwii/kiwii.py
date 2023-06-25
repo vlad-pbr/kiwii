@@ -4,7 +4,7 @@ I'm Kiwii
 
 from pathlib import Path
 
-from kiwii.parser.parser import parse
+from kiwii.parser import parse
 
 __version__ = "0.1.0"
 

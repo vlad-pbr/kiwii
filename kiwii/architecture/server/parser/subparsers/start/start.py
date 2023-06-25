@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 from dataclasses import asdict
 from typing import List
 
-from kiwii.architecture.server.server import start
+from kiwii.architecture.server import start
 from kiwii.shared.argparse_utils import to_flag
 
 from kiwii.architecture.server.parser.subparsers.start.consts import ARGUMENT_HOST, ARGUMENT_PORT
