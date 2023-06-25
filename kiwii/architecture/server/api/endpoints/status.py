@@ -3,8 +3,9 @@ from typing import Tuple
 import json
 
 from kiwii.architecture.server.api import register
+from kiwii.architecture.shared.endpoints import STATUS_ENDPOINT
 
 
-@register(HTTPMethod.GET, r"/status")
+@register(HTTPMethod.GET, STATUS_ENDPOINT)
 def status(_) -> Tuple[HTTPStatus, str]:
     return HTTPStatus.OK, json.dumps({})
