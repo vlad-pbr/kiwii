@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional, Callable, Any
+from typing import Optional, Callable, Any, Iterable
 
 
 @dataclass
@@ -9,3 +9,4 @@ class Argument:
     default: Any
     required: bool
     help: str
+    choices: Optional[Iterable]
