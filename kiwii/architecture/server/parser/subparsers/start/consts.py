@@ -21,8 +21,8 @@ ARGUMENT_PORT = Argument(
     help="port to listen on",
 )
 
-ARGUMENT_SSL_CERT = Argument(
-    dest=to_destination("ssl-cert"),
+ARGUMENT_TLS_CERT = Argument(
+    dest=to_destination("tls-cert"),
     type=str,
     default=None,
     required=False,
@@ -30,8 +30,8 @@ ARGUMENT_SSL_CERT = Argument(
     help="path to certificate public key in PEM format"
 )
 
-ARGUMENT_SSL_KEY = Argument(
-    dest=to_destination("ssl-key"),
+ARGUMENT_TLS_KEY = Argument(
+    dest=to_destination("tls-key"),
     type=str,
     default=None,
     required=False,
