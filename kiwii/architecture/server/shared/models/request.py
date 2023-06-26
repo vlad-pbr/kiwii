@@ -1,7 +1,7 @@
-from http import HTTPMethod
 from typing import NamedTuple
+
+from .route import Route
 
 
 class Request(NamedTuple):
-    method: HTTPMethod
-    path: str
+    route: Route

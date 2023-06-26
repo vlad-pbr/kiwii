@@ -6,16 +6,23 @@ from ssl import PROTOCOL_TLS_SERVER, SSLContext
 from typing import Optional
 
 from kiwii.architecture.server.api import handle
-from kiwii.architecture.server.shared.models import SSLCertChain, ServerAddress, Request
-from kiwii.shared.logging_utils import get_critical_exit_logger
+from kiwii.architecture.server.shared.models import SSLCertChain, ServerAddress, Request, Route
+from kiwii.shared.logging_utils import get_critical_exit_logger, LoggerName
 
-_logger = get_critical_exit_logger("kiwii-server")
+_logger = get_critical_exit_logger(LoggerName.SERVER)
 
 
 class KiwiiRequestHandler(BaseHTTPRequestHandler):
 
     def handle_request(self) -> None:
-        response = handle(Request(method=HTTPMethod[self.command], path=self.path))
+        response = handle(
+            Request(
+                route=Route(
+                    method=HTTPMethod[self.command],
+                    path=self.path
+                )
+            )
+        )
 
         self.send_response(int(response.status))
         self.end_headers()
