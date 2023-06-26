@@ -1,20 +1,28 @@
-import logging
 import re
 from http import HTTPStatus
-from typing import Dict
+from typing import Dict, Callable
 
 from kiwii.architecture.server.api.auth import disable_authentication, requires_authentication
-from kiwii.architecture.server.api.shared.types import EndpointDecoratorReturn, EndpointHandler
+from kiwii.architecture.server.api.shared.types import EndpointHandler
 from kiwii.architecture.server.shared.models import Request, Response, Route
 from kiwii.shared.logging_utils import get_critical_exit_logger, LoggerName
 
 _handlers: Dict[Route, EndpointHandler] = {}
 _logger = get_critical_exit_logger(LoggerName.API)
-_logger.setLevel(logging.INFO)  # TODO receive from instantiation
+
+
+def initialize(log_level: str) -> None:
+
+    # apply log level
+    _logger.setLevel(log_level)
+
+    # register endpoints
+    import kiwii.architecture.server.api.endpoints
+    _ = kiwii.architecture.server.api.endpoints
 
 
 def register(route: Route,
-             authenticate: bool = True) -> EndpointDecoratorReturn:
+             authenticate: bool = True) -> Callable[[EndpointHandler], EndpointHandler]:
     def _inner(handler: EndpointHandler) -> EndpointHandler:
 
         # validate path regex

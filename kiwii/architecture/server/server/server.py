@@ -5,7 +5,7 @@ from http import HTTPMethod
 from ssl import PROTOCOL_TLS_SERVER, SSLContext
 from typing import Optional
 
-from kiwii.architecture.server.api import handle
+from kiwii.architecture.server.api import handle, initialize as initialize_api
 from kiwii.architecture.server.shared.models import SSLCertChain, ServerAddress, Request, Route
 from kiwii.shared.logging_utils import get_critical_exit_logger, LoggerName
 
@@ -38,7 +38,7 @@ class KiwiiRequestHandler(BaseHTTPRequestHandler):
 
 def start(server_address: ServerAddress, ssl_cert_chain: Optional[SSLCertChain], log_level: str):
 
-    # set log level for server logger
+    # set log level for server
     _logger.setLevel(log_level)
     _logger.info(f"log level is set to '{log_level}'")
 
@@ -53,6 +53,9 @@ def start(server_address: ServerAddress, ssl_cert_chain: Optional[SSLCertChain],
 
         ssl_context = SSLContext(PROTOCOL_TLS_SERVER)
         ssl_context.load_cert_chain(**asdict(ssl_cert_chain))
+
+    _logger.info("initializing API and registering endpoints...")
+    initialize_api(log_level)
 
     with ThreadingHTTPServer(server_address, KiwiiRequestHandler) as server:
 
