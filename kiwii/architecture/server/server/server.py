@@ -53,7 +53,7 @@ def start(server_address: ServerAddress, ssl_cert_chain: Optional[SSLCertChain],
         if ssl_context:
             server.socket = ssl_context.wrap_socket(server.socket, server_side=True)
         else:
-            _logger.warning("SSL certificate was not provided, but is very much recommended")
+            _logger.warning("TLS certificate was not provided, but is very much recommended")
 
         _logger.info(f"server started at {server_address} (TLS {'secure' if ssl_context else 'insecure'})")
         server.serve_forever()
