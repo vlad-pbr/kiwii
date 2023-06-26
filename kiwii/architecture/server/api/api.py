@@ -2,7 +2,7 @@ import re
 from http import HTTPStatus
 from typing import Dict, Callable
 
-from kiwii.architecture.server.api.auth import disable_authentication, requires_authentication
+from kiwii.architecture.server.api.auth import disable_authentication, authenticate_request
 from kiwii.architecture.server.api.shared.types import EndpointHandler
 from kiwii.architecture.server.shared.models import Request, Response, Route
 from kiwii.shared.logging_utils import get_critical_exit_logger, LoggerName
@@ -48,7 +48,7 @@ def register(route: Route,
 def handle(request: Request) -> Response:
 
     # make sure authentication checks out
-    if requires_authentication(request.route):
+    if not authenticate_request(request):
         return Response(status=HTTPStatus.FORBIDDEN)
 
     # find matching handler

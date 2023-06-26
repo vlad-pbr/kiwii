@@ -20,7 +20,8 @@ class KiwiiRequestHandler(BaseHTTPRequestHandler):
                 route=Route(
                     method=HTTPMethod[self.command],
                     path=self.path
-                )
+                ),
+                headers=self.headers
             )
         )
 
