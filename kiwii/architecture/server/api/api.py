@@ -1,30 +1,30 @@
 import re
 
-from typing import Callable, Dict, Tuple, Optional
+from typing import Callable, Dict, Tuple
 from http import HTTPMethod, HTTPStatus
 
-_handlers: Dict[str, Dict[str, Callable[[Tuple], Tuple[HTTPStatus, str]]]] = {}
+from kiwii.architecture.server.shared.models import Request, Response
+
+_handlers: Dict[HTTPMethod, Dict[str, Callable[[Tuple], Response]]] = {}
 
 
-def register(method: HTTPMethod, path: str) -> Callable[[Callable], Callable[[Tuple], Tuple[HTTPStatus, str]]]:
-    strmethod = str(method)
-
-    def _inner(handler: Callable[[Tuple], Tuple[HTTPStatus, str]]) -> Callable[[Tuple], Tuple[HTTPStatus, str]]:
-        if strmethod not in _handlers:
-            _handlers[strmethod]: Dict[str, Callable[[Tuple], Tuple[HTTPStatus, str]]] = {}
-        _handlers[strmethod][path] = handler
+def register(method: HTTPMethod, path: str) -> Callable[[Callable], Callable[[Tuple], Response]]:
+    def _inner(handler: Callable[[Tuple], Response]) -> Callable[[Tuple], Response]:
+        if method not in _handlers:
+            _handlers[method]: Dict[str, Callable[[Tuple], Response]] = {}
+        _handlers[method][path] = handler
         return handler
     return _inner
 
 
-def handle(method: str, path: str) -> Tuple[HTTPStatus, Optional[str]]:
+def handle(request: Request) -> Response:
 
-    if method not in _handlers:
-        return HTTPStatus.NOT_FOUND, None
+    if request.method not in _handlers:
+        return Response(status=HTTPStatus.NOT_FOUND)
 
-    for path_pattern, handler in _handlers[method].items():
-        match = re.match(path_pattern, path)
+    for path_pattern, handler in _handlers[request.method].items():
+        match = re.match(path_pattern, request.path)
         if match:
             return handler(match.groups())
 
-    return HTTPStatus.NOT_FOUND, None
+    return Response(status=HTTPStatus.NOT_FOUND)

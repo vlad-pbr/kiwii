@@ -1,11 +1,12 @@
 from os.path import isfile
 from dataclasses import asdict
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
+from http import HTTPMethod
 from ssl import PROTOCOL_TLS_SERVER, SSLContext
 from typing import Optional
 
 from kiwii.architecture.server.api import handle
-from kiwii.architecture.server.shared.models import SSLCertChain, ServerAddress
+from kiwii.architecture.server.shared.models import SSLCertChain, ServerAddress, Request
 from kiwii.shared.logging_utils import get_critical_exit_logger
 
 _logger = get_critical_exit_logger("kiwii-server")
@@ -14,13 +15,12 @@ _logger = get_critical_exit_logger("kiwii-server")
 class KiwiiRequestHandler(BaseHTTPRequestHandler):
 
     def handle_request(self) -> None:
-        status, body = handle(self.command, self.path)
-        status_code = int(status)
+        response = handle(Request(method=HTTPMethod[self.command], path=self.path))
 
-        self.send_response(int(status_code))
+        self.send_response(int(response.status))
         self.end_headers()
-        if body:
-            self.wfile.write(body.encode())
+        if response.body:
+            self.wfile.write(response.body.encode())
 
     def do_GET(self) -> None:
         self.handle_request()
@@ -44,7 +44,7 @@ def start(server_address: ServerAddress, ssl_cert_chain: Optional[SSLCertChain],
             if not isfile(_path):
                 _logger.critical(f"path specified for '{_name}' is not a file: {_path}")
 
-        ssl_context = SSLContext(PROTOCOL_TLS_SERVER)  # TODO ciphers
+        ssl_context = SSLContext(PROTOCOL_TLS_SERVER)
         ssl_context.load_cert_chain(**asdict(ssl_cert_chain))
 
     with ThreadingHTTPServer(server_address, KiwiiRequestHandler) as server:
