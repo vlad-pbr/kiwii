@@ -1,4 +1,4 @@
-import re
+from email.message import Message
 from typing import Set
 
 from kiwii.architecture.server.shared.models import Route, Request
@@ -18,18 +18,25 @@ def disable_authentication(route: Route) -> None:
     _do_not_authenticate.add(route)
 
 
-def authenticate_request(request: Request) -> bool:
-
-    # check routes with disabled authentication
-    for not_authenticated_route in _do_not_authenticate:  # TODO there must be a more efficient way...
-        if not_authenticated_route.method == request.route.method and re.match(not_authenticated_route.path,
-                                                                               request.route.path):
-            return True
+def authenticate_user(headers: Message) -> bool:
 
     # perform authentication
-    username = request.headers.get(AUTHENTICATION_HEADER_USERNAME, "")
-    password = request.headers.get(AUTHENTICATION_HEADER_PASSWORD, "")
-    if username != AUTHENTICATION_CREDENTIALS_USERNAME or password != AUTHENTICATION_CREDENTIALS_PASSWORD:
-        return False
+    username = headers.get(AUTHENTICATION_HEADER_USERNAME, "")
+    password = headers.get(AUTHENTICATION_HEADER_PASSWORD, "")
+    if username == AUTHENTICATION_CREDENTIALS_USERNAME and password == AUTHENTICATION_CREDENTIALS_PASSWORD:
+        return True
 
-    return True
+    return False
+
+
+def authenticate_request(route: Route, request: Request) -> bool:
+
+    # if route authentication is disabled - allow
+    if route in _do_not_authenticate:
+        return True
+
+    # if user is authenticated - allow
+    if authenticate_user(request.headers):
+        return True
+
+    return False

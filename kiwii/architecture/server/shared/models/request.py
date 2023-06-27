@@ -1,9 +1,9 @@
 from email.message import Message
 from typing import NamedTuple
 
-from .route import Route
+from .endpoint import Endpoint
 
 
 class Request(NamedTuple):
-    route: Route
+    endpoint: Endpoint
     headers: Message

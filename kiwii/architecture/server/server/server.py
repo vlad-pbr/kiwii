@@ -1,12 +1,12 @@
-from os.path import isfile
 from dataclasses import asdict
-from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from http import HTTPMethod
+from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
+from os.path import isfile
 from ssl import PROTOCOL_TLS_SERVER, SSLContext
 from typing import Optional
 
 from kiwii.architecture.server.api import handle, initialize as initialize_api
-from kiwii.architecture.server.shared.models import SSLCertChain, ServerAddress, Request, Route
+from kiwii.architecture.server.shared.models import SSLCertChain, ServerAddress, Request, Endpoint
 from kiwii.shared.logging_utils import get_critical_exit_logger, LoggerName
 
 _logger = get_critical_exit_logger(LoggerName.SERVER)
@@ -17,7 +17,7 @@ class KiwiiRequestHandler(BaseHTTPRequestHandler):
     def handle_request(self) -> None:
         response = handle(
             Request(
-                route=Route(
+                endpoint=Endpoint(
                     method=HTTPMethod[self.command],
                     path=self.path
                 ),
@@ -55,7 +55,7 @@ def start(server_address: ServerAddress, ssl_cert_chain: Optional[SSLCertChain],
         ssl_context = SSLContext(PROTOCOL_TLS_SERVER)
         ssl_context.load_cert_chain(**asdict(ssl_cert_chain))
 
-    _logger.info("initializing API and registering endpoints...")
+    _logger.info("initializing API and registering routes...")
     initialize_api(log_level)
 
     with ThreadingHTTPServer(server_address, KiwiiRequestHandler) as server:
