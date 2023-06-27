@@ -76,4 +76,4 @@ def handle(request: Request) -> Response:
         if authenticate_user(request.headers):
             return Response(status=HTTPStatus.NOT_FOUND)
 
-    return Response(status=HTTPStatus.FORBIDDEN)
+    return Response(status=HTTPStatus.UNAUTHORIZED)
