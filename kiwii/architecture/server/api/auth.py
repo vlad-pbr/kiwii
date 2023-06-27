@@ -1,15 +1,15 @@
+import re
+import base64
 from email.message import Message
 from typing import Set
 
 from kiwii.architecture.server.shared.models import Route, Request
 
-# TODO single header?
-AUTHENTICATION_HEADER_USERNAME: str = "Username"
-AUTHENTICATION_HEADER_PASSWORD: str = "Password"
+AUTHORIZATION_HEADER: str = "Authorization"
+AUTHORIZATION_PATTERN: re.Pattern = re.compile(r"^Basic (.*)$")
 
 # TODO delegate to actual storage
-AUTHENTICATION_CREDENTIALS_USERNAME: str = "admin"
-AUTHENTICATION_CREDENTIALS_PASSWORD: str = "admin"
+AUTHENTICATION_CREDENTIALS: str = base64.b64encode(b"admin:admin").decode()
 
 _do_not_authenticate: Set[Route] = set()
 
@@ -20,13 +20,21 @@ def disable_authentication(route: Route) -> None:
 
 def authenticate_user(headers: Message) -> bool:
 
-    # perform authentication
-    username = headers.get(AUTHENTICATION_HEADER_USERNAME, "")
-    password = headers.get(AUTHENTICATION_HEADER_PASSWORD, "")
-    if username == AUTHENTICATION_CREDENTIALS_USERNAME and password == AUTHENTICATION_CREDENTIALS_PASSWORD:
-        return True
+    # make sure authorization header is present
+    authorization_value: str = headers.get(AUTHORIZATION_HEADER, "")
+    if not authorization_value:
+        return False
 
-    return False
+    # make sure authorization value is valid
+    authorization_match = AUTHORIZATION_PATTERN.match(authorization_value)
+    if not authorization_match:
+        return False
+
+    # make sure credentials match
+    if authorization_match.groups()[0] != AUTHENTICATION_CREDENTIALS:
+        return False
+
+    return True
 
 
 def authenticate_request(route: Route, request: Request) -> bool:
