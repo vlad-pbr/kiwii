@@ -37,7 +37,11 @@ class KiwiiRequestHandler(BaseHTTPRequestHandler):
         self.handle_request()
 
 
-def start(server_address: ServerAddress, ssl_cert_chain: Optional[SSLCertChain], log_level: str):
+def start(
+        server_address: ServerAddress,
+        ssl_cert_chain: Optional[SSLCertChain],
+        log_level: str,
+        expose_doc: bool):
 
     # set log level for server
     _logger.setLevel(log_level)
@@ -56,7 +60,7 @@ def start(server_address: ServerAddress, ssl_cert_chain: Optional[SSLCertChain],
         ssl_context.load_cert_chain(**asdict(ssl_cert_chain))
 
     _logger.info("initializing API and registering routes...")
-    initialize_api(log_level)
+    initialize_api(log_level, expose_doc)
 
     with ThreadingHTTPServer(server_address, KiwiiRequestHandler) as server:
 

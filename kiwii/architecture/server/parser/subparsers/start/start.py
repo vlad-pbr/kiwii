@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from kiwii.architecture.server import start
 from kiwii.architecture.server.parser.subparsers.start.consts import ARGUMENT_HOST, ARGUMENT_PORT, ARGUMENT_TLS_CERT, \
-    ARGUMENT_TLS_KEY, ARGUMENT_LOG_LEVEL
+    ARGUMENT_TLS_KEY, ARGUMENT_LOG_LEVEL, ARGUMENT_DOC
 from kiwii.architecture.server.shared.models import SSLCertChain, ServerAddress
 from kiwii.shared.argparse_utils import to_flag
 
@@ -19,6 +19,7 @@ def parse(args: List[str]):
     parser.add_argument(to_flag(ARGUMENT_TLS_CERT.dest), **asdict(ARGUMENT_TLS_CERT))
     parser.add_argument(to_flag(ARGUMENT_TLS_KEY.dest), **asdict(ARGUMENT_TLS_KEY))
     parser.add_argument(to_flag(ARGUMENT_LOG_LEVEL.dest), **asdict(ARGUMENT_LOG_LEVEL))
+    parser.add_argument(to_flag(ARGUMENT_DOC.dest), **asdict(ARGUMENT_DOC))
 
     args = parser.parse_args(args)
     args_dict = vars(args)
@@ -36,5 +37,6 @@ def parse(args: List[str]):
     start(
         ServerAddress(host=args_dict[ARGUMENT_HOST.dest], port=args_dict[ARGUMENT_PORT.dest]),
         ssl_cert_chain,
-        args_dict[ARGUMENT_LOG_LEVEL.dest]
+        args_dict[ARGUMENT_LOG_LEVEL.dest],
+        args_dict[ARGUMENT_DOC.dest]
     )

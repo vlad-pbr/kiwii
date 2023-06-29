@@ -11,14 +11,19 @@ _handlers: Dict[Route, RouteHandler] = {}
 _logger = get_critical_exit_logger(LoggerName.API)
 
 
-def initialize(log_level: str) -> None:
+def initialize(log_level: str, expose_doc: bool) -> None:
 
     # apply log level
     _logger.setLevel(log_level)
 
-    # register routes
-    import kiwii.architecture.server.api.routes
-    _ = kiwii.architecture.server.api.routes
+    # register core routes
+    import kiwii.architecture.server.api.routes.core
+    _ = kiwii.architecture.server.api.routes.core
+
+    # register optional routes if required
+    if expose_doc:
+        import kiwii.architecture.server.api.routes.optional.doc
+        _ = kiwii.architecture.server.api.routes.optional.doc
 
 
 def register(method: HTTPMethod,

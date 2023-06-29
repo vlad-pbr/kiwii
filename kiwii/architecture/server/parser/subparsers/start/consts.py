@@ -1,7 +1,7 @@
 from logging import getLevelNamesMapping, INFO
 
 from kiwii.shared.argparse_utils import to_destination
-from kiwii.shared.models import Argument
+from kiwii.shared.models import Argument, StoreTrueArgument
 
 ARGUMENT_HOST = Argument(
     dest=to_destination("host"),
@@ -46,4 +46,9 @@ ARGUMENT_LOG_LEVEL = Argument(
     required=False,
     choices=[k for k in getLevelNamesMapping().keys()],
     help="log level the server will log at"
+)
+
+ARGUMENT_DOC = StoreTrueArgument(
+    dest=to_destination("doc"),
+    help="expose documentation API endpoint"
 )
