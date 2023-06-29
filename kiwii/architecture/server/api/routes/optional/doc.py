@@ -19,17 +19,18 @@ class KiwiiHTMLParser(HTMLParser):
     def handle_starttag(self, tag: str, attrs: List[Tuple[str, Optional[str]]]) -> None:
 
         # TODO inject <style>
+        # TODO anchor links
+        # TODO external links
 
         # prepend all href values with documentation URI
         # redirect all `file:/` references to self
         fixed_attrs: List[Tuple[str, Optional[str]]] = []
         for k, v in attrs:
-            if tag == "a":
-                if k == "href":
-                    if v.startswith("file:/"):
-                        v = ""
-                    else:
-                        v = f"{DOC_ROUTE_PATH}/{v}"
+            if tag == "a" and k == "href":
+                if v.startswith("file:/"):
+                    v = ""
+                else:
+                    v = f"{DOC_ROUTE_PATH}/{v}"
             fixed_attrs.append((k, v))
 
         # encode back to HTML
