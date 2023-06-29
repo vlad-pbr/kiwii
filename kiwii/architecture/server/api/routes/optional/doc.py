@@ -46,7 +46,7 @@ class KiwiiHTMLParser(HTMLParser):
         self.encoded += f"<!{decl}>"
 
 
-def _writedoc(thing: str) -> str:
+def writedoc(thing: str) -> str:
     """
     Repurposed version of pydoc `writedoc` method which returns the generated HTML page
     instead of writing to file.
@@ -64,7 +64,7 @@ def doc(params: RouteParams) -> Response:
     # encode HTML data returned by pydoc using custom HTML parser
     parser = KiwiiHTMLParser()
     try:
-        parser.feed(_writedoc(params.path_params[0] if params.path_params[0] else top_module_name))
+        parser.feed(writedoc(params.path_params[0] if params.path_params[0] else top_module_name))
     except ImportError:
         return Response(status=HTTPStatus.NOT_FOUND)
 
