@@ -1,10 +1,9 @@
 import re
 from http import HTTPStatus, HTTPMethod
-from re import Match
-from typing import Dict, Callable, Optional
+from typing import Dict
 
-from kiwii.architecture.server.api.auth import disable_authentication, authenticate_request, authenticate_user
-from kiwii.architecture.server.api.shared.types import RouteHandler
+from kiwii.architecture.server.api.shared.models import RouteParams
+from kiwii.architecture.server.api.shared.types import RouteHandler, RouteDecorator
 from kiwii.architecture.server.shared.models import Request, Response, Route
 from kiwii.shared.logging_utils import get_critical_exit_logger, LoggerName
 
@@ -23,8 +22,7 @@ def initialize(log_level: str) -> None:
 
 
 def register(method: HTTPMethod,
-             path_regex: str,
-             authenticate: bool = True) -> Callable[[RouteHandler], RouteHandler]:
+             path_regex: str) -> RouteDecorator:
     def _inner(handler: RouteHandler) -> RouteHandler:
 
         # validate path regex and create compiled pattern
@@ -34,17 +32,10 @@ def register(method: HTTPMethod,
             _logger.error(f"disabling route '{path_regex}' as it is an invalid regex: {e}")
             return handler
 
-        # build route object
+        # build route object and add handler
         route = Route(method=method, pattern=pattern)
-
-        # add handler
         _handlers[route] = handler
-
-        # opt out of authentication if specified
-        if not authenticate:
-            disable_authentication(route)
-
-        _logger.info(f"registered route: '{path_regex}'")
+        _logger.debug(f"registered route: '{path_regex}'")
 
         return handler
 
@@ -53,27 +44,17 @@ def register(method: HTTPMethod,
 
 def handle(request: Request) -> Response:
 
-    # find matching route
-    route: Optional[Route] = None
-    handler: Optional[RouteHandler] = None
-    match: Optional[Match[str]] = None
+    # find and use matching route
     for _route, _handler in _handlers.items():
         if _route.method == request.endpoint.method:
             _match = _route.pattern.match(request.endpoint.path)
             if _match:
-                route = _route
-                handler = _handler
-                match = _match
-                break
+                _logger.debug(f"request for '{request.endpoint.path}' handled by route '{_route.pattern.pattern}'")
+                return _handler(
+                    RouteParams(
+                        request=request,
+                        path_params=_match.groups()
+                    )
+                )
 
-    # if matching route was found and user is authenticated for the matching route - handle
-    if route:
-        if authenticate_request(route, request):
-            return handler(match.groups())
-
-    # if matching route was not found, but user is authenticated - report "Not Found"
-    else:
-        if authenticate_user(request.headers):
-            return Response(status=HTTPStatus.NOT_FOUND)
-
-    return Response(status=HTTPStatus.UNAUTHORIZED)
+    return Response(status=HTTPStatus.NOT_FOUND)
