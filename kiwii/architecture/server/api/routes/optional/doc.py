@@ -41,18 +41,28 @@ class KiwiiHTMLParser(HTMLParser):
 
         # TODO inject <style>
         # TODO anchor links
-        # TODO external links
 
-        # prepend all href values with documentation URI
-        # redirect all `file:/` references to self
+        # re-encode `href` values
         fixed_attrs: List[Tuple[str, Optional[str]]] = []
-        for k, v in attrs:
-            if tag == "a" and k == "href":
-                if v.startswith("file:/"):
-                    v = ""
-                else:
-                    v = f"{DOC_ROUTE_PATH}/{v}"
-            fixed_attrs.append((k, v))
+        if tag != "a":
+            fixed_attrs = attrs
+        else:
+            for k, v in attrs:
+                if k == "href":
+
+                    # keep external links intact
+                    if v.startswith("http"):
+                        pass
+
+                    # redirect all `file:/` references to self
+                    elif v.startswith("file:/"):
+                        v = ""
+
+                    # prepend all href values with documentation URI
+                    else:
+                        v = f"{DOC_ROUTE_PATH}/{v}"
+
+                fixed_attrs.append((k, v))
 
         # encode back to HTML
         self.encoded += f"<{tag} {' '.join([f'{k}={chr(34)}{v}{chr(34)}' for k, v in fixed_attrs])}".strip() + ">"
