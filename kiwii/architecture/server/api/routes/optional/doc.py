@@ -1,18 +1,23 @@
 import pydoc
 import sysconfig
 import platform
+import urllib.parse
+from os.path import normpath, normcase
 from http import HTTPMethod, HTTPStatus
 from html.parser import HTMLParser
 from pathlib import Path
 from typing import Optional, Tuple, List
 
-from kiwii import __name__ as top_module_name, __pythondocs__ as kiwii_docs_url
+from kiwii import __name__ as top_module_name, __pythondocs__ as kiwii_url
 from kiwii.architecture.server.api import register
 from kiwii.architecture.server.api.shared.models import RouteParams
 from kiwii.architecture.server.shared.models import Response
 from kiwii.architecture.shared.route_paths import DOC_ROUTE_PATTERN, DOC_ROUTE_PATH
 
-PYTHON_STDLIB_URL: str = f"https://github.com/python/cpython/tree/{'.'.join(platform.python_version_tuple()[:2])}/Lib"
+PYTHON_STDLIB_URL = urllib.parse.urlparse(
+    f"https://github.com/python/cpython/tree/{'.'.join(platform.python_version_tuple()[:2])}/Lib"
+)
+KIWII_URL = urllib.parse.urlparse(kiwii_url)
 
 
 class KiwiiHTMLParser(HTMLParser):
@@ -41,39 +46,50 @@ class KiwiiHTMLParser(HTMLParser):
     def __init__(self, module: str):
         super().__init__(convert_charrefs=False)
 
-        self.module_path: str = f"{module.replace('.', '/')}"
+        self.module_path: Path = Path(module.replace('.', '/'))
         self.encoded: str = ""
 
     def local_to_external_file_url(self, path: str) -> str:
         """
         `pydoc` adds local 'file:' style links to rendered HTML leading to the file/module. This method ensures that:
-        - local links lead to external python doc link
+        - local links lead to external python doc links
         - links that lead to modules (that end with `__init__.py`) lead to appropriate `__init__.py` files
         - links that lead to files (that end with `.py`) lead to appropriate `.py` files
 
         Returns external URL which matches the provided local file URL.
         """
 
-        # strip "file:" protocol
-        if path.startswith("file:"):
-            path_no_protocol = Path(path[5:])
+        # decode URI encoding
+        unquoted_path = urllib.parse.unquote(path)
+
+        # strip "file:" protocol and convert to actual Path
+        if unquoted_path.startswith("file:"):
+            real_path = Path(unquoted_path[5:])
         else:
-            path_no_protocol = Path(path)
+            real_path = Path(unquoted_path)
 
         # resolve docs url based on if the module is standard library or kiwii
         # one advantage of being a standard library only module is that I don't have to consider any other module >:D
-        if str(path_no_protocol).startswith(sysconfig.get_path('stdlib')):
-            docs_url = PYTHON_STDLIB_URL
+        #
+        # now, Windows paths suck - multiple slashes can be present and directory names are not case-sensitive
+        # therefore we must completely normalize both paths in order to use `startswith` here
+        if str(normcase(normpath(str(real_path)))).startswith(normcase(normpath(sysconfig.get_path('stdlib')))):
+            code_url = PYTHON_STDLIB_URL
         else:
-            docs_url = kiwii_docs_url
+            code_url = KIWII_URL
 
         # resolve final part of the filename
-        if str(path_no_protocol).endswith('__init__.py'):
-            filename: str = f'/{path_no_protocol.name}'
+        if real_path.name == '__init__.py':
+            file_uri = self.module_path / real_path.name
         else:
-            filename: str = '.py'
+            file_uri = self.module_path.parent / f"{self.module_path.name}.py"
 
-        return f"{docs_url}/{self.module_path}{filename}"
+        # combine final url
+        url = code_url.geturl()
+        url += "/" if not url.endswith("/") else ""
+        url = urllib.parse.urljoin(url, file_uri.as_posix())
+
+        return url
 
     def handle_starttag(self, tag: str, attrs: List[Tuple[str, Optional[str]]]) -> None:
         """
