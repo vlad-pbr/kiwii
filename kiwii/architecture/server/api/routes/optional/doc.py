@@ -34,7 +34,7 @@ class KiwiiHTMLParser(HTMLParser):
     """
 
     def __init__(self):
-        super().__init__()
+        super().__init__(convert_charrefs=False)
         self.encoded: str = ""
 
     def handle_starttag(self, tag: str, attrs: List[Tuple[str, Optional[str]]]) -> None:
@@ -42,7 +42,6 @@ class KiwiiHTMLParser(HTMLParser):
         # TODO inject <style>
         # TODO anchor links
         # TODO external links
-        # TODO handle_charref
 
         # prepend all href values with documentation URI
         # redirect all `file:/` references to self
@@ -66,6 +65,9 @@ class KiwiiHTMLParser(HTMLParser):
 
     def handle_decl(self, decl: str) -> None:
         self.encoded += f"<!{decl}>"
+
+    def handle_entityref(self, name: str) -> None:
+        self.encoded += f"&{name}"
 
 
 def writedoc(thing: str) -> str:
