@@ -76,6 +76,11 @@ class KiwiiHTMLParser(HTMLParser):
         return f"{docs_url}/{self.module_path}{filename}"
 
     def handle_starttag(self, tag: str, attrs: List[Tuple[str, Optional[str]]]) -> None:
+        """
+        Encodes all start tags as-is, unless they are `<a>` tags, in which case:
+        - all relative documentation links are prepended with the kiwii doc URI
+        - all local `file:` references are re-encoded to lead to actual external code
+        """
 
         # TODO inject <style>
 
@@ -109,9 +114,15 @@ class KiwiiHTMLParser(HTMLParser):
         self.encoded += f"<{tag} {' '.join([f'{k}={chr(34)}{v}{chr(34)}' for k, v in fixed_attrs])}".strip() + ">"
 
     def handle_endtag(self, tag: str) -> None:
+        """Encodes all end tags as-is."""
+
         self.encoded += f"</{tag}>"
 
     def handle_data(self, data: str) -> None:
+        """
+        Encodes all plaintext data tags as-is, unless they are local file paths, in which case they are rewritten
+        to lead to external code.
+        """
 
         # assume data is path
         path: Path = Path(data)
@@ -123,9 +134,13 @@ class KiwiiHTMLParser(HTMLParser):
         self.encoded += data
 
     def handle_decl(self, decl: str) -> None:
+        """Encodes all doctype declarations as-is."""
+
         self.encoded += f"<!{decl}>"
 
     def handle_entityref(self, name: str) -> None:
+        """Encodes all entity references as-is."""
+
         self.encoded += f"&{name}"
 
 
