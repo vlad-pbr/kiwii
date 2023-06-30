@@ -1,14 +1,18 @@
 import pydoc
+import sysconfig
+import platform
 from http import HTTPMethod, HTTPStatus
 from html.parser import HTMLParser
 from pathlib import Path
 from typing import Optional, Tuple, List
 
-from kiwii import __name__ as top_module_name, __pythondocs__ as python_docs
+from kiwii import __name__ as top_module_name, __pythondocs__ as kiwii_docs_url
 from kiwii.architecture.server.api import register
 from kiwii.architecture.server.api.shared.models import RouteParams
 from kiwii.architecture.server.shared.models import Response
 from kiwii.architecture.shared.route_paths import DOC_ROUTE_PATTERN, DOC_ROUTE_PATH
+
+PYTHON_STDLIB_URL: str = f"https://github.com/python/cpython/tree/{'.'.join(platform.python_version_tuple()[:2])}/Lib"
 
 
 class KiwiiHTMLParser(HTMLParser):
@@ -50,7 +54,26 @@ class KiwiiHTMLParser(HTMLParser):
         Returns external URL which matches the provided local file URL.
         """
 
-        return f"{python_docs}/{self.module_path}{f'/{Path(path).name}' if path.endswith('__init__.py') else '.py'}"
+        # strip "file:" protocol
+        if path.startswith("file:"):
+            path_no_protocol = Path(path[5:])
+        else:
+            path_no_protocol = Path(path)
+
+        # resolve docs url based on if the module is standard library or kiwii
+        # one advantage of being a standard library only module is that I don't have to consider any other module >:D
+        if str(path_no_protocol).startswith(sysconfig.get_path('stdlib')):
+            docs_url = PYTHON_STDLIB_URL
+        else:
+            docs_url = kiwii_docs_url
+
+        # resolve final part of the filename
+        if str(path_no_protocol).endswith('__init__.py'):
+            filename: str = f'/{path_no_protocol.name}'
+        else:
+            filename: str = '.py'
+
+        return f"{docs_url}/{self.module_path}{filename}"
 
     def handle_starttag(self, tag: str, attrs: List[Tuple[str, Optional[str]]]) -> None:
 
@@ -89,7 +112,13 @@ class KiwiiHTMLParser(HTMLParser):
         self.encoded += f"</{tag}>"
 
     def handle_data(self, data: str) -> None:
-        # TODO handle local urls
+
+        # assume data is path
+        path: Path = Path(data)
+
+        # if path is absolute (filters out all plaintext HTML data) and is an actual file - replace with external URL
+        if path.is_absolute() and path.is_file():
+            data = self.local_to_external_file_url(data)
 
         self.encoded += data
 
