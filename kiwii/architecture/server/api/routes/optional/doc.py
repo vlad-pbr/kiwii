@@ -40,7 +40,6 @@ class KiwiiHTMLParser(HTMLParser):
     def handle_starttag(self, tag: str, attrs: List[Tuple[str, Optional[str]]]) -> None:
 
         # TODO inject <style>
-        # TODO anchor links
 
         # re-encode `href` values
         fixed_attrs: List[Tuple[str, Optional[str]]] = []
@@ -54,6 +53,11 @@ class KiwiiHTMLParser(HTMLParser):
                     if v.startswith("http"):
                         pass
 
+                    # keep relative anchor links intact
+                    elif v.startswith("#"):
+                        pass
+
+                    # TODO handle file links in a better way
                     # redirect all `file:/` references to self
                     elif v.startswith("file:/"):
                         v = ""
