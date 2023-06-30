@@ -1,5 +1,5 @@
 """
-Constants (mostly `argparse` related models) for the top level kiwii parser.
+Constants (mostly `argparse` related models) for the top level kiwii CLI parser.
 """
 
 from typing import Dict, Callable, List

@@ -1,3 +1,7 @@
+"""
+Constants (mostly `argparse` related models) for the kiwii server CLI parser.
+"""
+
 from typing import Dict, Callable, List
 
 from kiwii.shared.models import Subparser, SubparserAction

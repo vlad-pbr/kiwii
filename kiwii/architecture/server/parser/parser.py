@@ -6,6 +6,7 @@ from kiwii.architecture.server.parser.consts import SUBPARSER_START, SUBPARSERAC
 
 
 def parse(args: List[str]):
+    """Uses `argparse` to parse kiwii server related CLI calls (e.g. starting, stopping, etc.)."""
 
     parser = ArgumentParser()
 

@@ -10,6 +10,9 @@ from kiwii.shared.argparse_utils import to_flag
 
 
 def parse(args: List[str]):
+    """
+    Uses `argparse` to parse kiwii server starting related CLI calls (e.g. reading TLS certificate, log level, etc.)
+    """
 
     parser = ArgumentParser()
 

@@ -1,3 +1,7 @@
+"""
+Constants (mostly `argparse` related models) for the kiwii server start CLI parser.
+"""
+
 from logging import getLevelNamesMapping, INFO
 
 from kiwii.shared.argparse_utils import to_destination
