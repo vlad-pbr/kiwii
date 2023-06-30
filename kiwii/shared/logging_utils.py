@@ -1,9 +1,9 @@
-import logging
-from enum import StrEnum
-
 """
 Logging related utilities used across all core parts of the architecture.
 """
+
+import logging
+from enum import StrEnum
 
 default_formatter = logging.Formatter('[%(asctime)s] - %(name)s - %(levelname)s - %(message)s')
 

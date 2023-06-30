@@ -1,3 +1,7 @@
+"""
+Constants (mostly `argparse` related models) for the top level kiwii parser.
+"""
+
 from typing import Dict, Callable, List
 
 from kiwii.architecture.agent.parser import parse as agent_parser

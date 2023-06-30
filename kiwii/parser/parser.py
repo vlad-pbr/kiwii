@@ -1,3 +1,7 @@
+"""
+Top-level kiwii parser.
+"""
+
 from argparse import ArgumentParser
 from dataclasses import asdict
 
@@ -7,6 +11,7 @@ from kiwii.shared.argparse_utils import to_flag
 
 
 def parse(file: str, description: str, version: str):
+    """Uses `argparse` to parse top-level CLI calls. This is the actual entrypoint for the entire CLI."""
 
     parser = ArgumentParser(
         prog=file,
