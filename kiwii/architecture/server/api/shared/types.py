@@ -1,3 +1,7 @@
+"""
+Common python typing constants used across the kiwii API entities.
+"""
+
 from typing import Callable
 
 from kiwii.architecture.server.api.shared.models import RouteParams

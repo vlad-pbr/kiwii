@@ -11,4 +11,11 @@ from kiwii.architecture.shared.route_paths import STATUS_ROUTE_PATTERN
 @register(HTTPMethod.GET, STATUS_ROUTE_PATTERN)
 @authenticate(AuthenticationMethod.BASIC)
 def status(_: RouteParams) -> Response:
+    """
+    Server status route handler. Returns JSON which contains general server status (e.g. configuration, available
+    agents, etc.).
+
+    TODO implement
+    """
+
     return Response(status=HTTPStatus.OK, body=json.dumps({}))

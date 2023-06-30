@@ -11,6 +11,27 @@ from kiwii.architecture.shared.route_paths import DOC_ROUTE_PATTERN, DOC_ROUTE_P
 
 
 class KiwiiHTMLParser(HTMLParser):
+    """
+    Custom `html.parser.HTMLParser` with additional encoding functionality hacked in.
+
+    The problem:
+    `pydoc` renders HTML for local viewing only, meaning all of the `href` values lead to `pydoc` rendered
+    HTML files and even local `.py` files for the modules themselves via `file:/` protocol. This, of course, does not
+    work when exposing documentation over remote API - HTML files do not reside on the server and `.py` files are
+    not located on the client's machine.
+
+    The solution:
+    Middleware between the `pydoc`'s rendered HTML and the actual response body for the client which edits the `href`
+    values to lead clients back to the API. However, `html.parser.HTMLParser` only handles the parsing of HTML and
+    does provide any API for editing it (which, unironically, makes complete sense - it's called a parser for a reason).
+    This is where the hack comes in. `html.parser.HTMLParser` provides handlers for when it encounters start (<...>) and
+    end (<&#47...>) HTML tags as it parses the HTML. These handlers are called chronologically as the parser encounters
+    these tags. Kiwii leverages these handler calls by recombining the HTML back to the original value, editing the
+    `href` values along the way and storing the re-encoded HTML in a custom class property. This property can then
+    be safely returned to the client. Yeah.
+
+    TODO this class does not belong here, move it to the appropriate directory
+    """
 
     def __init__(self):
         super().__init__()
@@ -21,6 +42,7 @@ class KiwiiHTMLParser(HTMLParser):
         # TODO inject <style>
         # TODO anchor links
         # TODO external links
+        # TODO handle_charref
 
         # prepend all href values with documentation URI
         # redirect all `file:/` references to self
@@ -60,6 +82,13 @@ def writedoc(thing: str) -> str:
 
 @register(HTTPMethod.GET, DOC_ROUTE_PATTERN)
 def doc(params: RouteParams) -> Response:
+    """
+    Documentation route handler:
+    - reads the requested module path parameter
+    - renders HTML for the requested module using `pydoc`'s underlying methods
+    - re-encodes `pydoc`'s HTML output using custom `html.parser.HTMLParser`
+    - returns re-encoded HTML back to client
+    """
 
     # encode HTML data returned by pydoc using custom HTML parser
     parser = KiwiiHTMLParser()

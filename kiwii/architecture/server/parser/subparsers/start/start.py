@@ -14,6 +14,8 @@ def parse(args: List[str]):
     Uses `argparse` to parse kiwii server starting related CLI calls (e.g. reading TLS certificate, log level, etc.)
     """
 
+    # TODO cors
+
     parser = ArgumentParser()
 
     # basic server args

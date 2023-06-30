@@ -13,6 +13,12 @@ AUTHENTICATION_CREDENTIALS: str = base64.b64encode(b"admin:admin").decode()
 
 
 def handle(auth_params: AuthenticationHandlerParams) -> Response:
+    """
+    Performs `HTTP Basic Authorization`:
+    - reads HTTP Authorization header
+    - validates the value format
+    - compares the credential value with actual credentials
+    """
 
     # make sure authorization header is present
     authorization_header_value = auth_params.route_params.request.headers.get(AUTHORIZATION_HEADER, "")
