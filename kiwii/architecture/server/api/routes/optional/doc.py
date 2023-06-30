@@ -1,9 +1,10 @@
 import pydoc
 from http import HTTPMethod, HTTPStatus
 from html.parser import HTMLParser
+from pathlib import Path
 from typing import Optional, Tuple, List
 
-from kiwii import __name__ as top_module_name
+from kiwii import __name__ as top_module_name, __pythondocs__ as python_docs
 from kiwii.architecture.server.api import register
 from kiwii.architecture.server.api.shared.models import RouteParams
 from kiwii.architecture.server.shared.models import Response
@@ -16,7 +17,7 @@ class KiwiiHTMLParser(HTMLParser):
 
     The problem:
     `pydoc` renders HTML for local viewing only, meaning all of the `href` values lead to `pydoc` rendered
-    HTML files and even local `.py` files for the modules themselves via `file:/` protocol. This, of course, does not
+    HTML files and even local `.py` files for the modules themselves via `file:` protocol. This, of course, does not
     work when exposing documentation over remote API - HTML files do not reside on the server and `.py` files are
     not located on the client's machine.
 
@@ -25,7 +26,7 @@ class KiwiiHTMLParser(HTMLParser):
     values to lead clients back to the API. However, `html.parser.HTMLParser` only handles the parsing of HTML and
     does provide any API for editing it (which, unironically, makes complete sense - it's called a parser for a reason).
     This is where the hack comes in. `html.parser.HTMLParser` provides handlers for when it encounters start (<...>) and
-    end (<&#47...>) HTML tags as it parses the HTML. These handlers are called chronologically as the parser encounters
+    end (</...>) HTML tags as it parses the HTML. These handlers are called chronologically as the parser encounters
     these tags. Kiwii leverages these handler calls by recombining the HTML back to the original value, editing the
     `href` values along the way and storing the re-encoded HTML in a custom class property. This property can then
     be safely returned to the client. Yeah.
@@ -33,9 +34,23 @@ class KiwiiHTMLParser(HTMLParser):
     TODO this class does not belong here, move it to the appropriate directory
     """
 
-    def __init__(self):
+    def __init__(self, module: str):
         super().__init__(convert_charrefs=False)
+
+        self.module_path: str = f"{module.replace('.', '/')}"
         self.encoded: str = ""
+
+    def local_to_external_file_url(self, path: str) -> str:
+        """
+        `pydoc` adds local 'file:' style links to rendered HTML leading to the file/module. This method ensures that:
+        - local links lead to external python doc link
+        - links that lead to modules (that end with `__init__.py`) lead to appropriate `__init__.py` files
+        - links that lead to files (that end with `.py`) lead to appropriate `.py` files
+
+        Returns external URL which matches the provided local file URL.
+        """
+
+        return f"{python_docs}/{self.module_path}{f'/{Path(path).name}' if path.endswith('__init__.py') else '.py'}"
 
     def handle_starttag(self, tag: str, attrs: List[Tuple[str, Optional[str]]]) -> None:
 
@@ -57,10 +72,9 @@ class KiwiiHTMLParser(HTMLParser):
                     elif v.startswith("#"):
                         pass
 
-                    # TODO handle file links in a better way
-                    # redirect all `file:/` references to self
-                    elif v.startswith("file:/"):
-                        v = ""
+                    # redirect all `file:` references to external module code
+                    elif v.startswith("file:"):
+                        v = self.local_to_external_file_url(v)
 
                     # prepend all href values with documentation URI
                     else:
@@ -75,6 +89,8 @@ class KiwiiHTMLParser(HTMLParser):
         self.encoded += f"</{tag}>"
 
     def handle_data(self, data: str) -> None:
+        # TODO handle local urls
+
         self.encoded += data
 
     def handle_decl(self, decl: str) -> None:
@@ -106,10 +122,13 @@ def doc(params: RouteParams) -> Response:
     - returns re-encoded HTML back to client
     """
 
+    # resolve module that is being documented
+    module = params.path_params[0] if params.path_params[0] else top_module_name
+
     # encode HTML data returned by pydoc using custom HTML parser
-    parser = KiwiiHTMLParser()
+    parser = KiwiiHTMLParser(module=module)
     try:
-        parser.feed(writedoc(params.path_params[0] if params.path_params[0] else top_module_name))
+        parser.feed(writedoc(module))
     except ImportError:
         return Response(status=HTTPStatus.NOT_FOUND)
 
