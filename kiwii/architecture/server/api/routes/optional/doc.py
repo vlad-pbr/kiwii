@@ -1,10 +1,9 @@
+import platform
 import pydoc
 import sysconfig
-import platform
 import urllib.parse
-from os.path import normpath, normcase
-from http import HTTPMethod, HTTPStatus
 from html.parser import HTMLParser
+from http import HTTPMethod, HTTPStatus
 from pathlib import Path
 from typing import Optional, Tuple, List
 
@@ -13,6 +12,7 @@ from kiwii.architecture.server.api import register
 from kiwii.architecture.server.api.shared.models import RouteParams
 from kiwii.architecture.server.shared.models import Response
 from kiwii.architecture.shared.route_paths import DOC_ROUTE_PATTERN, DOC_ROUTE_PATH
+from kiwii.shared.path_utils import urijoin, normalize
 
 PYTHON_STDLIB_URL = urllib.parse.urlparse(
     f"https://github.com/python/cpython/tree/{'.'.join(platform.python_version_tuple()[:2])}/Lib"
@@ -73,7 +73,7 @@ class KiwiiHTMLParser(HTMLParser):
         #
         # now, Windows paths suck - multiple slashes can be present and directory names are not case-sensitive
         # therefore we must completely normalize both paths in order to use `startswith` here
-        if str(normcase(normpath(str(real_path)))).startswith(normcase(normpath(sysconfig.get_path('stdlib')))):
+        if normalize(str(real_path)).startswith(normalize(sysconfig.get_path('stdlib'))):
             code_url = PYTHON_STDLIB_URL
         else:
             code_url = KIWII_URL
@@ -84,12 +84,7 @@ class KiwiiHTMLParser(HTMLParser):
         else:
             file_uri = self.module_path.parent / f"{self.module_path.name}.py"
 
-        # combine final url
-        url = code_url.geturl()
-        url += "/" if not url.endswith("/") else ""
-        url = urllib.parse.urljoin(url, file_uri.as_posix())
-
-        return url
+        return urijoin(code_url.geturl(), file_uri.as_posix())
 
     def handle_starttag(self, tag: str, attrs: List[Tuple[str, Optional[str]]]) -> None:
         """
@@ -122,7 +117,7 @@ class KiwiiHTMLParser(HTMLParser):
 
                     # prepend all href values with documentation URI
                     else:
-                        v = f"{DOC_ROUTE_PATH}/{v}"
+                        v = urijoin(DOC_ROUTE_PATH, v)
 
                 fixed_attrs.append((k, v))
 
