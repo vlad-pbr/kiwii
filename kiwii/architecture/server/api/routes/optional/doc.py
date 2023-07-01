@@ -3,15 +3,15 @@ import pydoc
 import sysconfig
 import urllib.parse
 from html.parser import HTMLParser
-from http import HTTPMethod, HTTPStatus
+from http import HTTPStatus
 from pathlib import Path
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple, List, NamedTuple
 
 from kiwii import __name__ as top_module_name, __pythondocs__ as kiwii_url
 from kiwii.architecture.server.api import register
 from kiwii.architecture.server.api.shared.models import RouteParams
 from kiwii.architecture.server.shared.models import Response
-from kiwii.architecture.shared.route_paths import DOC_ROUTE_PATTERN, DOC_ROUTE_PATH
+from kiwii.architecture.shared.routes import DOC_ROUTE, DocRouteParams
 from kiwii.shared.path_utils import urijoin, normalize
 
 PYTHON_STDLIB_URL = urllib.parse.urlparse(
@@ -117,7 +117,7 @@ class KiwiiHTMLParser(HTMLParser):
 
                     # prepend all href values with documentation URI
                     else:
-                        v = urijoin(DOC_ROUTE_PATH, v)
+                        v = urijoin(DOC_ROUTE.path, v)
 
                 fixed_attrs.append((k, v))
 
@@ -167,8 +167,11 @@ def writedoc(thing: str) -> str:
     return pydoc.html.page(pydoc.describe(_object), pydoc.html.document(_object, _name))
 
 
-@register(HTTPMethod.GET, DOC_ROUTE_PATTERN)
-def doc(params: RouteParams) -> Response:
+eh = NamedTuple('DocRouteParams', [("module", str)])
+
+
+@register(DOC_ROUTE)
+def doc(params: RouteParams[DocRouteParams]) -> Response:
     """
     Documentation route handler:
     - reads the requested module path parameter
@@ -178,7 +181,7 @@ def doc(params: RouteParams) -> Response:
     """
 
     # resolve module that is being documented
-    module = params.path_params[0] if params.path_params[0] else top_module_name
+    module = params.path_params.module if params.path_params.module else top_module_name
 
     # encode HTML data returned by pydoc using custom HTML parser
     parser = KiwiiHTMLParser(module=module)

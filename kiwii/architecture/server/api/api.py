@@ -2,13 +2,13 @@
 Kiwii API static class. Not actually a class as static classes are not pythonic.
 """
 
-import re
-from http import HTTPStatus, HTTPMethod
+from http import HTTPStatus
 from typing import Dict
 
 from kiwii.architecture.server.api.shared.models import RouteParams
 from kiwii.architecture.server.api.shared.types import RouteHandler, RouteDecorator
-from kiwii.architecture.server.shared.models import Request, Response, Route
+from kiwii.architecture.server.shared.models import Request, Response
+from kiwii.architecture.shared.models import Route
 from kiwii.shared.logging_utils import get_critical_exit_logger, LoggerName
 
 handlers: Dict[Route, RouteHandler] = {}
@@ -31,23 +31,14 @@ def initialize(log_level: str, expose_doc: bool) -> None:
         _ = kiwii.architecture.server.api.routes.optional.doc
 
 
-def register(method: HTTPMethod,
-             path_regex: str) -> RouteDecorator:
+def register(route: Route) -> RouteDecorator:
     """Decorator for the `Route` handlers which registers them with the API."""
 
     def _inner(handler: RouteHandler) -> RouteHandler:
 
-        # validate path regex and create compiled pattern
-        try:
-            pattern = re.compile(path_regex)
-        except re.error as e:
-            logger.error(f"disabling route '{path_regex}' as it is an invalid regex: {e}")
-            return handler
-
-        # build route object and add handler
-        route = Route(method=method, pattern=pattern)
+        # register route-to-handler entity
         handlers[route] = handler
-        logger.debug(f"registered route: '{path_regex}'")
+        logger.debug(f"registered route: '{route.pattern.pattern}'")
 
         return handler
 
@@ -69,7 +60,7 @@ def handle(request: Request) -> Response:
                 return _handler(
                     RouteParams(
                         request=request,
-                        path_params=_match.groups()
+                        path_params=_route.params_type(*_match.groups())
                     )
                 )
 

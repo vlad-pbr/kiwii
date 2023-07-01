@@ -1,6 +1,8 @@
 from http import HTTPMethod
 from re import Pattern
-from typing import NamedTuple
+from typing import NamedTuple, Type
+
+from kiwii.architecture.shared.types import RouteParamsType
 
 
 class Route(NamedTuple):
@@ -17,3 +19,5 @@ class Route(NamedTuple):
 
     method: HTTPMethod
     pattern: Pattern
+    path: str
+    params_type: Type[RouteParamsType]

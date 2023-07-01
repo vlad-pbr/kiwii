@@ -4,4 +4,6 @@ to entity patterns. This is used by route related modules (e.g. server which def
 values from given patterns in order to query the API, etc.).
 """
 
-AGENT_ID_PATTERN: str = r"[a-zA-Z0-9]{16}"
+import re
+
+AGENT_ID_PATTERN = re.compile(r"[a-zA-Z0-9]{16}")
