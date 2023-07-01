@@ -2,11 +2,11 @@
 Constants (mostly `argparse` related models) for the kiwii server CLI parser.
 """
 
-from typing import Dict, Callable, List
+from typing import Dict
 
-from kiwii.shared.models import Subparser, SubparserAction
 from kiwii.architecture.server.parser.subparsers.start import parse as start_parser
-
+from kiwii.shared.models import Subparser, SubparserAction
+from kiwii.shared.types import Parser
 
 SUBPARSERACTION_ACTION = SubparserAction(
     dest="action",
@@ -20,6 +20,6 @@ SUBPARSER_START = Subparser(
 )
 
 
-SUBPARSER_TO_CLI: Dict[str, Callable[[List[str]], None]] = {
+SUBPARSER_TO_CLI: Dict[str, Parser] = {
     SUBPARSER_START.name: start_parser,
 }

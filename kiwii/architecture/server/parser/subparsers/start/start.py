@@ -1,22 +1,27 @@
+"""
+Uses `argparse` to parse kiwii server starting related CLI calls (e.g. reading TLS certificate, log level, etc.)
+"""
+
 from argparse import ArgumentParser
 from dataclasses import asdict
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from kiwii.architecture.server import start
 from kiwii.architecture.server.parser.subparsers.start.consts import ARGUMENT_HOST, ARGUMENT_PORT, ARGUMENT_TLS_CERT, \
     ARGUMENT_TLS_KEY, ARGUMENT_LOG_LEVEL, ARGUMENT_DOC
 from kiwii.architecture.server.shared.models import SSLCertChain, ServerAddress
-from kiwii.shared.argparse_utils import to_flag
+from kiwii.shared.argparse_utils import to_flag, parse_prog
 
 
-def parse(args: List[str]):
-    """
-    Uses `argparse` to parse kiwii server starting related CLI calls (e.g. reading TLS certificate, log level, etc.)
-    """
+def parse(args: List[str], prog: Tuple):
+    """Start local kiwii server with provided configuration."""
 
     # TODO cors
 
-    parser = ArgumentParser()
+    parser = ArgumentParser(
+        prog=parse_prog(prog),
+        description=parse.__doc__
+    )
 
     # basic server args
     parser.add_argument(to_flag(ARGUMENT_HOST.dest), **asdict(ARGUMENT_HOST))

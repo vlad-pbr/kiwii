@@ -29,6 +29,7 @@ easily accessed by spinning up a local server and accessing the documentation en
 from pathlib import Path
 
 from kiwii.parser import parse
+from kiwii.shared.argparse_utils import delegate_prog
 
 __version__ = "0.1.0"
 
@@ -36,7 +37,7 @@ __version__ = "0.1.0"
 def cli():
     """Entrypoint for kiwii command line interface which simply calls `parse` with parameters."""
 
-    parse(Path(__file__).stem, __doc__, __version__)
+    parse(delegate_prog((), Path(__file__).stem), __doc__, __version__)
 
 
 if __name__ == "__main__":
