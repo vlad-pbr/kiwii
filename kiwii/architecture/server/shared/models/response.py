@@ -1,3 +1,4 @@
+from email.message import Message
 from http import HTTPStatus
 from typing import NamedTuple, Optional
 
@@ -8,4 +9,5 @@ class Response(NamedTuple):
     """
 
     status: HTTPStatus
+    headers: Optional[Message] = None
     body: Optional[str] = None

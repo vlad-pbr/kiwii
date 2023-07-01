@@ -15,6 +15,8 @@ class KiwiiHTTPRequestHandler(BaseHTTPRequestHandler):
     """
 
     def handle_request(self) -> None:
+
+        # handle request
         response = handle(
             Request(
                 endpoint=Endpoint(
@@ -25,8 +27,16 @@ class KiwiiHTTPRequestHandler(BaseHTTPRequestHandler):
             )
         )
 
+        # set response status code
         self.send_response(int(response.status))
+
+        # attach response headers if specified
+        if response.headers:
+            for header, value in response.headers.items():
+                self.send_header(header, value)
         self.end_headers()
+
+        # attach body is specified
         if response.body:
             self.wfile.write(response.body.encode())
 

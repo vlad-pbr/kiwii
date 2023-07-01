@@ -2,10 +2,11 @@ import platform
 import pydoc
 import sysconfig
 import urllib.parse
+from email.message import Message
 from html.parser import HTMLParser
 from http import HTTPStatus
 from pathlib import Path
-from typing import Optional, Tuple, List, NamedTuple
+from typing import Optional, Tuple, List
 
 from kiwii import __name__ as top_module_name, __pythondocs__ as kiwii_url
 from kiwii.architecture.server.api import register
@@ -167,9 +168,6 @@ def writedoc(thing: str) -> str:
     return pydoc.html.page(pydoc.describe(_object), pydoc.html.document(_object, _name))
 
 
-eh = NamedTuple('DocRouteParams', [("module", str)])
-
-
 @register(DOC_ROUTE)
 def doc(params: RouteParams[DocRouteParams]) -> Response:
     """
@@ -180,13 +178,17 @@ def doc(params: RouteParams[DocRouteParams]) -> Response:
     - returns re-encoded HTML back to client
     """
 
-    # resolve module that is being documented
-    module = params.path_params.module if params.path_params.module else top_module_name
+    # if no module is specified - redirect to top module (kiwii) documentation
+    if params.path_params.module is None:
+        headers = Message()
+        headers.add_header("Location", urijoin(DOC_ROUTE.path, f"{top_module_name}.html"))
+
+        return Response(status=HTTPStatus.PERMANENT_REDIRECT, headers=headers)
 
     # encode HTML data returned by pydoc using custom HTML parser
-    parser = KiwiiHTMLParser(module=module)
+    parser = KiwiiHTMLParser(module=params.path_params.module)
     try:
-        parser.feed(writedoc(module))
+        parser.feed(writedoc(params.path_params.module))
     except ImportError:
         return Response(status=HTTPStatus.NOT_FOUND)
 
