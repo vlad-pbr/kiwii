@@ -36,7 +36,7 @@ AGENT_STATUS_ROUTE = Route(
 DocRouteParams = NamedTuple("DocRouteParams", [("module", str)])
 DOC_ROUTE = Route(
     method=HTTPMethod.GET,
-    pattern=re.compile(r"^/doc(?:/|/(?:([a-z0-9._]*)\.html))?$"),
+    pattern=re.compile(r"^/doc(?:/|/([a-z0-9._]*)\.html)?$"),
     path=r"/doc",
     params_type=DocRouteParams
 )
