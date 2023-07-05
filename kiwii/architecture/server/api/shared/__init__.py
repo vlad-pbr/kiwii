@@ -1,3 +1,3 @@
 """
-Constants and models shared across the kiwii API entities.
+Constants, utilities and models shared across the kiwii API entities.
 """

@@ -1,9 +1,9 @@
-from email.message import Message
 from http import HTTPStatus
 
 from kiwii import __name__ as top_module_name
 from kiwii.architecture.server.api import register
 from kiwii.architecture.server.api.shared.models import RouteParams
+from kiwii.architecture.server.api.shared.routing_utils import redirect
 from kiwii.architecture.server.logic.doc.doc import render_module_doc_html
 from kiwii.architecture.server.shared.models import Response
 from kiwii.architecture.shared.routes import DOC_ROUTE, DocRouteParams
@@ -20,10 +20,7 @@ def doc(params: RouteParams[DocRouteParams]) -> Response:
 
     # if no module is specified - redirect to top module (kiwii) documentation
     if params.path_params.module is None:
-        headers = Message()
-        headers.add_header("Location", urijoin(DOC_ROUTE.path, f"{top_module_name}.html"))
-
-        return Response(status=HTTPStatus.PERMANENT_REDIRECT, headers=headers)
+        return redirect(urijoin(DOC_ROUTE.path, f"{top_module_name}.html"))
 
     # render module documentation
     module_doc_html = render_module_doc_html(params.path_params.module)
