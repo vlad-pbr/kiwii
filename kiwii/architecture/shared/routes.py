@@ -25,6 +25,14 @@ STATUS_ROUTE = Route(
     params_type=StatusRouteParams
 )
 
+AgentPostRouteParams = NamedTuple("AgentPostRouteParams", [])
+AGENT_POST_ROUTE = Route(
+    method=HTTPMethod.POST,
+    pattern=re.compile(fr"^/agent$"),
+    path=r"/agent",
+    params_type=AgentPostRouteParams
+)
+
 AgentStatusRouteParams = NamedTuple("AgentStatusRouteParams", [("id", str)])
 AGENT_STATUS_ROUTE = Route(
     method=HTTPMethod.GET,
