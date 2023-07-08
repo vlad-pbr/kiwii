@@ -1,15 +1,14 @@
-import base64
 import re
 from http import HTTPStatus
 
+from kiwii.architecture.server.api.auth.shared.hash_utils import get_hash
 from kiwii.architecture.server.api.auth.shared.models import AuthenticationHandlerParams
 from kiwii.architecture.server.api.shared.consts import HTTP_HEADER_AUTHORIZATION
 from kiwii.architecture.server.shared.models import Response
+from kiwii.data.data import retrieve
+from kiwii.data.data_structures.user import AdminDataStructure
 
 AUTHORIZATION_PATTERN: re.Pattern = re.compile(r"^Basic (.*)$")
-
-# TODO delegate to actual storage
-AUTHENTICATION_CREDENTIALS: str = base64.b64encode(b"admin:admin").decode()
 
 
 def handle(auth_params: AuthenticationHandlerParams) -> Response:
@@ -30,8 +29,10 @@ def handle(auth_params: AuthenticationHandlerParams) -> Response:
     if not authorization_value_match:
         return Response(status=HTTPStatus.UNAUTHORIZED)
 
+    user_data_structure = retrieve(AdminDataStructure)
+
     # make sure credentials match
-    if authorization_value_match.groups()[0] != AUTHENTICATION_CREDENTIALS:
+    if get_hash(authorization_value_match.groups()[0]) != user_data_structure.credentials:
         return Response(status=HTTPStatus.UNAUTHORIZED)
 
     return auth_params.route_handler(auth_params.route_params)
