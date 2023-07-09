@@ -2,8 +2,6 @@
 Server data layer static class.
 
 Not actually a class as static classes are not pythonic.
-
-# TODO don't like this, refactor
 """
 
 from pathlib import Path

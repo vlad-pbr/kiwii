@@ -1,6 +1,7 @@
 """
 Base data layer class for instantiation by various components.
 """
+
 from dataclasses import asdict
 from json import dumps, loads
 from pathlib import Path
@@ -39,7 +40,6 @@ class Data:
         # if file does not already exist - write initial file
         if not self.filepath.is_file():
             with self.filepath.open(mode="w") as _file:
-                # TODO overwrite
                 _file.write(dumps(asdict(DataLayer())))
 
     def store(self, data_structure: _DataStructure) -> None:
