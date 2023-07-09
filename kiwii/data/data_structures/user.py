@@ -7,4 +7,5 @@ from .datastructure import DataStructure
 class AdminDataStructure(DataStructure):
     """Single data structure to represent admin account credentials."""
 
-    credentials: str
+    hash: str
+    salt: str

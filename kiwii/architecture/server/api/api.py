@@ -9,10 +9,10 @@ from kiwii.architecture.server.api.shared.models import RouteParams
 from kiwii.architecture.server.api.shared.types import RouteHandler, RouteDecorator
 from kiwii.architecture.server.shared.models import Request, Response
 from kiwii.architecture.shared.models import Route
-from kiwii.shared.logging_utils import get_critical_exit_logger, LoggerName
+from kiwii.shared.logging.logging import get_logger, ComponentLoggerName
 
 handlers: Dict[Route, RouteHandler] = {}
-logger = get_critical_exit_logger(LoggerName.API)
+logger = get_logger(ComponentLoggerName.API)
 
 
 def initialize(log_level: str, expose_doc: bool) -> None:

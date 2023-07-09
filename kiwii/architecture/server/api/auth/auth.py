@@ -1,4 +1,5 @@
 import base64
+import time
 from functools import wraps
 from typing import Dict, Optional
 
@@ -10,7 +11,7 @@ from kiwii.architecture.server.api.shared.models import AuthenticationMethod, Ro
 from kiwii.architecture.server.api.shared.models.user_credentials import UserCredentials
 from kiwii.architecture.server.api.shared.types import RouteDecorator, RouteHandler
 from kiwii.architecture.server.shared.models import Response
-from kiwii.data.data import store
+from kiwii.architecture.server.data.data import get_data_layer
 from kiwii.data.data_structures.user import AdminDataStructure
 
 METHOD_TO_HANDLER: Dict[AuthenticationMethod, AuthenticationHandler] = {
@@ -38,17 +39,20 @@ def authenticate(method: AuthenticationMethod) -> RouteDecorator:
 
 
 def initialize(credentials: Optional[UserCredentials]) -> False:
-    """Initialization entrypoint for authentication layer."""
+    """
+    Initialization entrypoint for authentication layer.
+
+    Returns False if credentials were not provided and are also not present in persisted storage.
+    Return True otherwise.
+    """
 
     if credentials:
-        store(AdminDataStructure(
-            credentials=get_hash(base64.b64encode(f"{credentials.username}:{credentials.password}".encode()).decode())
+        salt: str = get_hash(str(time.time()))
+        get_data_layer().store(AdminDataStructure(
+            hash=get_hash(base64.b64encode(f"{credentials.username}:{credentials.password}".encode()).decode(), salt),
+            salt=salt
         ))
 
         return True
 
-    else:
-
-        # TODO read underlying storage if one is present
-
-        return False
+    return get_data_layer().retrieve(AdminDataStructure) is not None
