@@ -46,33 +46,25 @@ class Data:
 
         # if file does not already exist - write initial file
         if not self.filepath.is_file():
-            with self.filepath.open(mode="w") as _file:
-                _file.write(dumps(asdict(DataLayer())))
+            self._write(DataLayer())
 
     def store(self, data_structure: _DataStructure) -> None:
         """Stores provided data structure to storage"""
 
-        with self.lock:
+        # read data layer from disk
+        data_layer = self._read()
 
-            # read persisted data
-            with self.filepath.open("r") as _file:
-                data_layer: DataLayer = DataLayer(**loads(_file.read()))
+        # update data with new structure
+        data_layer.data_structures[data_structure.__class__.__name__] = data_structure
 
-            # update data with new structure
-            data_layer.data_structures[data_structure.__class__.__name__] = data_structure
-
-            # persist new data to file
-            with self.filepath.open("w") as _file:
-                _file.write(dumps(asdict(data_layer)))
+        # persist new data to file
+        self._write(data_layer)
 
     def retrieve(self, data_structure_type: Type[_DataStructure]) -> Optional[_DataStructure]:
         """Returns requested data structure or `None` if one is not currently present in storage"""
 
-        with self.lock:
-
-            # read persisted data
-            with self.filepath.open("r") as _file:
-                data_layer: DataLayer = DataLayer(**loads(_file.read()))
+        # read data layer from disk
+        data_layer = self._read()
 
         # read data structure dictionary if one is present
         data_structure_dict: Optional[Dict] = data_layer.data_structures.get(data_structure_type.__name__, None)
@@ -81,3 +73,17 @@ class Data:
 
         # return underlying data structure
         return data_structure_type(**data_structure_dict)
+
+    def _write(self, data_layer: DataLayer) -> None:
+        """Handles actual writing of `DataLayer` to disk."""
+
+        with self.lock:
+            with self.filepath.open("w") as _file:
+                _file.write(dumps(asdict(data_layer)))
+
+    def _read(self) -> DataLayer:
+        """Handles actual reading of `DataLayer` from disk."""
+
+        with self.lock:
+            with self.filepath.open("r") as _file:
+                return DataLayer(**loads(_file.read()))
