@@ -52,6 +52,24 @@ ARGUMENT_LOG_LEVEL = Argument(
     help="log level the server will log at"
 )
 
+ARGUMENT_USERNAME = Argument(
+    dest=to_destination("username"),
+    type=str,
+    default=None,
+    required=False,
+    choices=None,
+    help="authentication username"
+)
+
+ARGUMENT_PASSWORD = Argument(
+    dest=to_destination("password"),
+    type=str,
+    default=None,
+    required=False,
+    choices=None,
+    help="authentication password"
+)
+
 ARGUMENT_DOC = StoreTrueArgument(
     dest=to_destination("doc"),
     help="expose documentation API endpoint"
