@@ -7,7 +7,7 @@ from dataclasses import asdict
 from typing import List, Optional, Tuple
 
 from kiwii.architecture.server import start
-from kiwii.architecture.server.api.shared.models.user_credentials import UserCredentials
+from kiwii.architecture.shared.models.user_credentials import UserCredentials
 from kiwii.architecture.server.parser.subparsers.start.consts import ARGUMENT_HOST, ARGUMENT_PORT, ARGUMENT_TLS_CERT, \
     ARGUMENT_TLS_KEY, ARGUMENT_LOG_LEVEL, ARGUMENT_DOC, ARGUMENT_USERNAME, ARGUMENT_PASSWORD
 from kiwii.architecture.server.shared.models import SSLCertChain, ServerAddress

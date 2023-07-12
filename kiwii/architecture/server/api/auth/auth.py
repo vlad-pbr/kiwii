@@ -1,18 +1,15 @@
-import base64
-import time
 from functools import wraps
 from typing import Dict, Optional
 
-from kiwii.architecture.server.api.auth.shared.hash_utils import get_hash
+from kiwii.architecture.server.api.auth.methods import handle_basic_auth
 from kiwii.architecture.server.api.auth.shared.models import AuthenticationHandlerParams
 from kiwii.architecture.server.api.auth.shared.types import AuthenticationHandler
-from kiwii.architecture.server.api.auth.methods import handle_basic_auth
 from kiwii.architecture.server.api.shared.models import AuthenticationMethod, RouteParams
-from kiwii.architecture.server.api.shared.models.user_credentials import UserCredentials
 from kiwii.architecture.server.api.shared.types import RouteDecorator, RouteHandler
-from kiwii.architecture.server.shared.models import Response
 from kiwii.architecture.server.data.data import get_data_layer
-from kiwii.data.data_structures.user import AdminDataStructure
+from kiwii.architecture.server.shared.models import Response
+from kiwii.architecture.shared.models.user_credentials import UserCredentials
+from kiwii.data.data_structures.credentials import CredentialsDataStructure
 
 METHOD_TO_HANDLER: Dict[AuthenticationMethod, AuthenticationHandler] = {
     AuthenticationMethod.BASIC: handle_basic_auth
@@ -47,12 +44,10 @@ def initialize(credentials: Optional[UserCredentials]) -> False:
     """
 
     if credentials:
-        salt: str = get_hash(str(time.time()))
-        get_data_layer().store(AdminDataStructure(
-            hash=get_hash(base64.b64encode(f"{credentials.username}:{credentials.password}".encode()).decode(), salt),
-            salt=salt
+        get_data_layer().store(CredentialsDataStructure.from_literal(
+            plaintext_credentials=credentials.as_authorization_basic()
         ))
 
         return True
 
-    return get_data_layer().retrieve(AdminDataStructure) is not None
+    return get_data_layer().retrieve(CredentialsDataStructure) is not None

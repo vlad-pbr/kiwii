@@ -11,7 +11,7 @@ from typing import Optional
 from kiwii.architecture.server.api import initialize as initialize_api
 from kiwii.architecture.server.api.auth.auth import initialize as initialize_auth
 from kiwii.architecture.server.data.data import initialize as initialize_data
-from kiwii.architecture.server.api.shared.models.user_credentials import UserCredentials
+from kiwii.architecture.shared.models.user_credentials import UserCredentials
 from kiwii.architecture.server.server.kiwii_http_request_handler import KiwiiHTTPRequestHandler
 from kiwii.architecture.server.shared.models import SSLCertChain, ServerAddress
 from kiwii.shared.logging.logging import get_logger
