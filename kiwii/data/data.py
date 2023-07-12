@@ -17,6 +17,13 @@ _DataStructure = TypeVar("_DataStructure", bound=DataStructure)
 
 
 class Data:
+    """
+    Dedicated class for persisting data to file. Used across the architecture elements to store data which needs
+    to persist across reboots.
+
+    NOTE: currently the implementation of data structures serialization forbids `DataStructure` models from
+    using non-standard types as they can not be deserialized back.
+    """
 
     def __init__(self, filepath: Path, component: ComponentLoggerName, log_level: str):
 
