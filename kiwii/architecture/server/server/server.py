@@ -63,4 +63,9 @@ def start(
             logger.warning("TLS certificate was not provided, but is very much recommended")
 
         logger.info(f"server started at {server_address} (TLS {'secure' if ssl_context else 'insecure'})")
-        server.serve_forever()
+
+        # start server
+        try:
+            server.serve_forever()
+        except KeyboardInterrupt as e:
+            logger.info(f"received '{e.__class__.__name__}', shutting down...")
