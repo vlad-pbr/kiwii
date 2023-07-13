@@ -6,23 +6,23 @@ Not actually a class as static classes are not pythonic.
 
 from functools import wraps
 from http import HTTPStatus
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Union
 
+from kiwii.architecture.server.api.auth.consts import ADMIN_USER_ALLOWED_ROUTES
 from kiwii.architecture.server.api.auth.shared.models import AuthenticationHandlerParams
 from kiwii.architecture.server.api.auth.shared.types import AuthenticationHandler, AuthenticationHandlerDecorator
 from kiwii.architecture.server.api.shared.models import AuthenticationMethod, RouteParams
 from kiwii.architecture.server.api.shared.types import RouteDecorator, RouteHandler
 from kiwii.architecture.server.data.data import get_data_layer
-from kiwii.architecture.server.shared.models import Response
+from kiwii.architecture.server.shared.models import Response, Endpoint
 from kiwii.architecture.shared.models import Route
 from kiwii.architecture.shared.models.user_credentials import UserCredentials
-from kiwii.architecture.shared.routes import STATUS_ROUTE
 from kiwii.data.data_structures.credentials import CredentialsDataStructure
 from kiwii.shared.logging.componentloggername import ComponentLoggerName
 from kiwii.shared.logging.logging import get_logger
 
 authentication_handlers: Dict[AuthenticationMethod, AuthenticationHandler] = {}
-authorization_acl: Dict[str, List[Route]] = {}
+_authorization_acl: Dict[str, List[Union[Route, Endpoint]]] = {}
 logger = get_logger(ComponentLoggerName.API_AUTH)
 
 
@@ -55,13 +55,13 @@ def authenticate(method: AuthenticationMethod) -> RouteDecorator:
     return _inner
 
 
-def add_permissions(credentials: CredentialsDataStructure, *routes: Route) -> None:
+def add_permissions(credentials: CredentialsDataStructure, *endpoints: Union[Route, Endpoint]) -> None:
     """Allows user/agent authenticated with provided credentials to use provided routes."""
 
-    if credentials.hash not in authorization_acl:
-        authorization_acl[credentials.hash] = []
+    if credentials.hash not in _authorization_acl:
+        _authorization_acl[credentials.hash] = []
 
-    authorization_acl[credentials.hash].extend(routes)
+    _authorization_acl[credentials.hash].extend(endpoints)
 
 
 def authorize(handler: RouteHandler) -> RouteHandler:
@@ -77,9 +77,9 @@ def authorize(handler: RouteHandler) -> RouteHandler:
 
             return Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
-        # make sure ACL entry exists for given credentials and an associated route exists in the ACL
-        acl: Optional[List[Route]] = authorization_acl.get(params.authorization.credentials.hash, None)
-        if acl is None or params.route not in acl:
+        # make sure ACL entry exists for given credentials and an associated route/endpoint exists in the ACL
+        acl: Optional[List[Route]] = _authorization_acl.get(params.authorization.credentials.hash, None)
+        if acl is None or params.route not in acl or not params.request.endpoint not in acl:
             return Response(status=HTTPStatus.UNAUTHORIZED)
 
         return handler(params)
@@ -99,7 +99,7 @@ def register(method: AuthenticationMethod) -> AuthenticationHandlerDecorator:
     return _inner
 
 
-def initialize(credentials: Optional[UserCredentials], log_level: str) -> False:
+def initialize(admin_credentials: Optional[UserCredentials], log_level: str) -> False:
     """
     Initialization entrypoint for authentication + authorization layer.
 
@@ -107,17 +107,10 @@ def initialize(credentials: Optional[UserCredentials], log_level: str) -> False:
     Return True otherwise.
     """
 
-    # set logging level
-    logger.setLevel(log_level)
-
-    # register authentication methods
-    import kiwii.architecture.server.api.auth.authentication_methods
-    _ = kiwii.architecture.server.api.auth.authentication_methods
-
-    # make sure that credentials were provided or already exist in persisted storage
-    if credentials:
+    # make sure that admin credentials were provided or already exist in persisted storage
+    if admin_credentials:
         credentials_structure = CredentialsDataStructure.from_literal(
-            plaintext_credentials=credentials.as_authorization_basic()
+            plaintext_credentials=admin_credentials.as_authorization_basic()
         )
         get_data_layer().store(credentials_structure)
     else:
@@ -125,9 +118,14 @@ def initialize(credentials: Optional[UserCredentials], log_level: str) -> False:
         if credentials_structure is None:
             return False
 
+    # set logging level
+    logger.setLevel(log_level)
+
     # add admin permissions to admin user
-    # TODO static mapping for admin user permissions
-    # TODO credential to route matching fails when there are specific routes for specific agents
-    add_permissions(credentials_structure, STATUS_ROUTE)
+    add_permissions(credentials_structure, *ADMIN_USER_ALLOWED_ROUTES)
+
+    # register authentication methods
+    import kiwii.architecture.server.api.auth.authentication_methods
+    _ = kiwii.architecture.server.api.auth.authentication_methods
 
     return True
