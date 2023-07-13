@@ -1,6 +1,6 @@
 from functools import wraps
 from http import HTTPStatus
-from typing import Dict, Optional
+from typing import Dict, Optional, List, Pattern
 
 from kiwii.architecture.server.api.auth.shared.models import AuthenticationHandlerParams
 from kiwii.architecture.server.api.auth.shared.types import AuthenticationHandler, AuthenticationHandlerDecorator
@@ -14,11 +14,12 @@ from kiwii.shared.logging.componentloggername import ComponentLoggerName
 from kiwii.shared.logging.logging import get_logger
 
 authentication_handlers: Dict[AuthenticationMethod, AuthenticationHandler] = {}
+authorization_mapping: Dict[str, List[Pattern]] = {}
 logger = get_logger(ComponentLoggerName.API_AUTH)
 
 
 def authenticate(method: AuthenticationMethod) -> RouteDecorator:
-    """Decorator for the `Route` handlers which enforces a requested authentication method on decorated route."""
+    """Decorator for `Route` handlers which enforces a requested authentication method on decorated route."""
 
     def _inner(handler: RouteHandler) -> RouteHandler:
         @wraps(handler)
@@ -44,6 +45,24 @@ def authenticate(method: AuthenticationMethod) -> RouteDecorator:
         return _handler
 
     return _inner
+
+
+def authorize(handler: RouteHandler) -> RouteHandler:
+    """Decorator for `Route` handlers which enforces authorization on decorated route."""
+
+    @wraps(handler)
+    def _handler(params: RouteParams) -> Response:
+
+        # make sure authentication handler has populated the authorization metadata
+        if params.authorization is None:
+            logger.error(
+                f"endpoint '{params.request.endpoint}' is authorized, but authentication metadata was not populated")
+
+            return Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+        return handler(params)
+
+    return _handler
 
 
 def register(method: AuthenticationMethod) -> AuthenticationHandlerDecorator:

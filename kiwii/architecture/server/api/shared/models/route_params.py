@@ -1,11 +1,15 @@
-from typing import NamedTuple, Generic
+from dataclasses import dataclass
+from typing import Generic, Optional
 
 from kiwii.architecture.server.shared.models import Request
 from kiwii.architecture.shared.types import RouteParamsType
+from .authorization_metadata import AuthorizationMetadata
 
 
-class RouteParams(Generic[RouteParamsType], NamedTuple):
+@dataclass
+class RouteParams(Generic[RouteParamsType]):
     """Parameters provided to route handlers."""
 
     request: Request
     path_params: RouteParamsType
+    authorization: Optional[AuthorizationMetadata] = None

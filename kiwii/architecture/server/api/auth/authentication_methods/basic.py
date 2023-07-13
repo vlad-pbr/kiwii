@@ -1,3 +1,4 @@
+import base64
 import re
 from http import HTTPStatus
 from typing import Optional
@@ -8,6 +9,7 @@ from kiwii.architecture.server.api.shared.models import AuthenticationMethod
 from kiwii.architecture.server.data.data import get_data_layer
 from kiwii.architecture.server.shared.models import Response
 from kiwii.architecture.server.api.auth.auth import register
+from kiwii.architecture.server.api.shared.models import AuthorizationMetadata
 from kiwii.data.data_structures.credentials import CredentialsDataStructure
 
 AUTHORIZATION_PATTERN: re.Pattern = re.compile(r"^Basic (.*)$")
@@ -39,7 +41,13 @@ def basic(auth_params: AuthenticationHandlerParams) -> Response:
         return Response(status=HTTPStatus.UNAUTHORIZED)
 
     # make sure credentials match
-    if not ADMIN_CREDENTIALS.match(authorization_value_match.groups()[0]):
+    authorization_credentials: str = authorization_value_match.groups()[0]
+    if not ADMIN_CREDENTIALS.match(authorization_credentials):
         return Response(status=HTTPStatus.UNAUTHORIZED)
+
+    # populate authorization metadata
+    auth_params.route_params.authorization = AuthorizationMetadata(
+        username=base64.b64decode(authorization_credentials).split(b":")[0].decode()
+    )
 
     return auth_params.route_handler(auth_params.route_params)
