@@ -7,4 +7,4 @@ with a `Response` model including the return status. In case authentication chec
 handler should call the route handler itself in order to properly handle the request.
 """
 
-from .basic import handle as handle_basic_auth
+from .basic import basic

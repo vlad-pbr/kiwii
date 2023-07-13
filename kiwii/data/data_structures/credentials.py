@@ -4,7 +4,7 @@ import random
 from dataclasses import dataclass
 from typing import Optional
 
-from kiwii.architecture.server.api.auth.shared.hash_utils import get_hash
+from kiwii.shared.hash_utils import get_hash
 from .datastructure import DataStructure
 
 

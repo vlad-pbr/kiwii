@@ -48,7 +48,7 @@ def start(
     initialize_data("server.json", log_level)
 
     logger.info("initializing authentication layer...")
-    if not initialize_auth(credentials):
+    if not initialize_auth(credentials, log_level):
         logger.critical("user credentials are not present in storage, please provide them via CLI")
 
     logger.info("initializing API and registering routes...")

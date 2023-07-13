@@ -4,15 +4,18 @@ from typing import Optional
 
 from kiwii.architecture.server.api.auth.shared.models import AuthenticationHandlerParams
 from kiwii.architecture.server.api.shared.consts import HTTP_HEADER_AUTHORIZATION
+from kiwii.architecture.server.api.shared.models import AuthenticationMethod
 from kiwii.architecture.server.data.data import get_data_layer
 from kiwii.architecture.server.shared.models import Response
+from kiwii.architecture.server.api.auth.auth import register
 from kiwii.data.data_structures.credentials import CredentialsDataStructure
 
 AUTHORIZATION_PATTERN: re.Pattern = re.compile(r"^Basic (.*)$")
 ADMIN_CREDENTIALS: Optional[CredentialsDataStructure] = None
 
 
-def handle(auth_params: AuthenticationHandlerParams) -> Response:
+@register(AuthenticationMethod.BASIC)
+def basic(auth_params: AuthenticationHandlerParams) -> Response:
     """
     Performs `HTTP Basic Authorization`:
     - reads HTTP Authorization header
