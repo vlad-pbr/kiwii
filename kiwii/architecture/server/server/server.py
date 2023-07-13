@@ -9,7 +9,7 @@ from ssl import PROTOCOL_TLS_SERVER, SSLContext
 from typing import Optional
 
 from kiwii.architecture.server.api import initialize as initialize_api
-from kiwii.architecture.server.api.auth.auth import initialize as initialize_auth
+from kiwii.architecture.server.api.auth import initialize as initialize_auth
 from kiwii.architecture.server.data.data import initialize as initialize_data
 from kiwii.architecture.shared.models.user_credentials import UserCredentials
 from kiwii.architecture.server.server.kiwii_http_request_handler import KiwiiHTTPRequestHandler
@@ -47,7 +47,7 @@ def start(
     logger.info("initializing server data layer...")
     initialize_data("server.json", log_level)
 
-    logger.info("initializing authentication layer...")
+    logger.info("initializing authentication/authorization layer...")
     if not initialize_auth(credentials, log_level):
         logger.critical("user credentials are not present in storage, please provide them via CLI")
 

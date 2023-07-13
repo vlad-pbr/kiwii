@@ -1,6 +1,12 @@
+"""
+Authentication and authorization static class.
+
+Not actually a class as static classes are not pythonic.
+"""
+
 from functools import wraps
 from http import HTTPStatus
-from typing import Dict, Optional, List, Pattern
+from typing import Dict, Optional, List
 
 from kiwii.architecture.server.api.auth.shared.models import AuthenticationHandlerParams
 from kiwii.architecture.server.api.auth.shared.types import AuthenticationHandler, AuthenticationHandlerDecorator
@@ -8,13 +14,15 @@ from kiwii.architecture.server.api.shared.models import AuthenticationMethod, Ro
 from kiwii.architecture.server.api.shared.types import RouteDecorator, RouteHandler
 from kiwii.architecture.server.data.data import get_data_layer
 from kiwii.architecture.server.shared.models import Response
+from kiwii.architecture.shared.models import Route
 from kiwii.architecture.shared.models.user_credentials import UserCredentials
+from kiwii.architecture.shared.routes import STATUS_ROUTE
 from kiwii.data.data_structures.credentials import CredentialsDataStructure
 from kiwii.shared.logging.componentloggername import ComponentLoggerName
 from kiwii.shared.logging.logging import get_logger
 
 authentication_handlers: Dict[AuthenticationMethod, AuthenticationHandler] = {}
-authorization_mapping: Dict[str, List[Pattern]] = {}
+authorization_acl: Dict[str, List[Route]] = {}
 logger = get_logger(ComponentLoggerName.API_AUTH)
 
 
@@ -47,6 +55,15 @@ def authenticate(method: AuthenticationMethod) -> RouteDecorator:
     return _inner
 
 
+def add_permissions(credentials: CredentialsDataStructure, *routes: Route) -> None:
+    """Allows user/agent authenticated with provided credentials to use provided routes."""
+
+    if credentials.hash not in authorization_acl:
+        authorization_acl[credentials.hash] = []
+
+    authorization_acl[credentials.hash].extend(routes)
+
+
 def authorize(handler: RouteHandler) -> RouteHandler:
     """Decorator for `Route` handlers which enforces authorization on decorated route."""
 
@@ -59,6 +76,11 @@ def authorize(handler: RouteHandler) -> RouteHandler:
                 f"endpoint '{params.request.endpoint}' is authorized, but authentication metadata was not populated")
 
             return Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+        # make sure ACL entry exists for given credentials and an associated route exists in the ACL
+        acl: Optional[List[Route]] = authorization_acl.get(params.authorization.credentials.hash, None)
+        if acl is None or params.route not in acl:
+            return Response(status=HTTPStatus.UNAUTHORIZED)
 
         return handler(params)
 
@@ -79,7 +101,7 @@ def register(method: AuthenticationMethod) -> AuthenticationHandlerDecorator:
 
 def initialize(credentials: Optional[UserCredentials], log_level: str) -> False:
     """
-    Initialization entrypoint for authentication layer.
+    Initialization entrypoint for authentication + authorization layer.
 
     Returns False if credentials were not provided and are also not present in persisted storage.
     Return True otherwise.
@@ -92,11 +114,20 @@ def initialize(credentials: Optional[UserCredentials], log_level: str) -> False:
     import kiwii.architecture.server.api.auth.authentication_methods
     _ = kiwii.architecture.server.api.auth.authentication_methods
 
+    # make sure that credentials were provided or already exist in persisted storage
     if credentials:
-        get_data_layer().store(CredentialsDataStructure.from_literal(
+        credentials_structure = CredentialsDataStructure.from_literal(
             plaintext_credentials=credentials.as_authorization_basic()
-        ))
+        )
+        get_data_layer().store(credentials_structure)
+    else:
+        credentials_structure = get_data_layer().retrieve(CredentialsDataStructure)
+        if credentials_structure is None:
+            return False
 
-        return True
+    # add admin permissions to admin user
+    # TODO static mapping for admin user permissions
+    # TODO credential to route matching fails when there are specific routes for specific agents
+    add_permissions(credentials_structure, STATUS_ROUTE)
 
-    return get_data_layer().retrieve(CredentialsDataStructure) is not None
+    return True

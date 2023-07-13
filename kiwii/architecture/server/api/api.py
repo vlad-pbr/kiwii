@@ -60,7 +60,8 @@ def handle(request: Request) -> Response:
                 return _handler(
                     RouteParams(
                         request=request,
-                        path_params=_route.params_type(*_match.groups())
+                        path_params=_route.params_type(*_match.groups()),
+                        route=_route
                     )
                 )
 

@@ -2,4 +2,4 @@
 Authentication layer for kiwii API.
 """
 
-from .auth import authenticate
+from .auth import authenticate, authorize, register, initialize

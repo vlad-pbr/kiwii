@@ -1,15 +1,14 @@
-import base64
 import re
 from http import HTTPStatus
 from typing import Optional
 
+from kiwii.architecture.server.api.auth import register
 from kiwii.architecture.server.api.auth.shared.models import AuthenticationHandlerParams
 from kiwii.architecture.server.api.shared.consts import HTTP_HEADER_AUTHORIZATION
 from kiwii.architecture.server.api.shared.models import AuthenticationMethod
+from kiwii.architecture.server.api.shared.models import AuthorizationMetadata
 from kiwii.architecture.server.data.data import get_data_layer
 from kiwii.architecture.server.shared.models import Response
-from kiwii.architecture.server.api.auth.auth import register
-from kiwii.architecture.server.api.shared.models import AuthorizationMetadata
 from kiwii.data.data_structures.credentials import CredentialsDataStructure
 
 AUTHORIZATION_PATTERN: re.Pattern = re.compile(r"^Basic (.*)$")
@@ -47,7 +46,10 @@ def basic(auth_params: AuthenticationHandlerParams) -> Response:
 
     # populate authorization metadata
     auth_params.route_params.authorization = AuthorizationMetadata(
-        username=base64.b64decode(authorization_credentials).split(b":")[0].decode()
+        credentials=CredentialsDataStructure.from_literal(
+            plaintext_credentials=authorization_credentials,
+            salt=ADMIN_CREDENTIALS.salt
+        )
     )
 
     return auth_params.route_handler(auth_params.route_params)
