@@ -13,7 +13,7 @@ from kiwii.data.models.datalayer import DataLayer
 from kiwii.shared.logging.componentloggername import ComponentLoggerName
 from kiwii.shared.logging.logging import get_logger
 
-_DataStructure = TypeVar("_DataStructure", bound=DataStructure)
+TDataStructure = TypeVar("TDataStructure", bound=DataStructure)
 
 
 class Data:
@@ -23,6 +23,8 @@ class Data:
 
     NOTE: currently the implementation of data structures serialization forbids `DataStructure` models from
     using non-standard types as they can not be deserialized back.
+
+    # TODO implement serializer/deserializer to avoid this limitation
     """
 
     def __init__(self, filepath: Path, component: ComponentLoggerName, log_level: str):
@@ -48,7 +50,7 @@ class Data:
         if not self.filepath.is_file():
             self._write(DataLayer())
 
-    def store(self, data_structure: _DataStructure) -> None:
+    def store(self, data_structure: TDataStructure) -> None:
         """Stores provided data structure to storage"""
 
         # read data layer from disk
@@ -60,7 +62,7 @@ class Data:
         # persist new data to file
         self._write(data_layer)
 
-    def retrieve(self, data_structure_type: Type[_DataStructure]) -> Optional[_DataStructure]:
+    def retrieve(self, data_structure_type: Type[TDataStructure]) -> Optional[TDataStructure]:
         """Returns requested data structure or `None` if one is not currently present in storage"""
 
         # read data layer from disk
