@@ -17,6 +17,14 @@ from typing import NamedTuple
 from kiwii.architecture.shared.models.route import Route
 from kiwii.architecture.shared.patterns import AGENT_ID_PATTERN
 
+FaviconRouteParams = NamedTuple("FaviconRouteParams", [])
+FAVICON_ROUTE = Route(
+    method=HTTPMethod.GET,
+    pattern=re.compile(r"^/favicon\.ico$"),
+    path=r"/favicon.ico",
+    params_type=FaviconRouteParams
+)
+
 StatusRouteParams = NamedTuple("StatusRouteParams", [])
 STATUS_ROUTE = Route(
     method=HTTPMethod.GET,

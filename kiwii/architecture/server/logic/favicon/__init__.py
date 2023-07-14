@@ -1,0 +1,3 @@
+"""
+Favicon retrieval logic.
+"""

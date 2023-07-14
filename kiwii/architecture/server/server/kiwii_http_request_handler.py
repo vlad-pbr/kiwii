@@ -38,7 +38,9 @@ class KiwiiHTTPRequestHandler(BaseHTTPRequestHandler):
 
         # attach body is specified
         if response.body:
-            self.wfile.write(response.body.encode())
+            if isinstance(response.body, str):
+                response.body = response.body.encode()
+            self.wfile.write(response.body)
 
     def do_GET(self) -> None:
         self.handle_request()
