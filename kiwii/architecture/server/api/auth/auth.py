@@ -17,7 +17,7 @@ from kiwii.architecture.server.data.data import get_data_layer
 from kiwii.architecture.server.shared.models import Response, Endpoint
 from kiwii.architecture.shared.models import Route
 from kiwii.architecture.shared.models.user_credentials import UserCredentials
-from kiwii.data.data_structures.credentials import CredentialsDataStructure
+from kiwii.architecture.server.data.data_structures.credentials import CredentialsDataStructure
 from kiwii.shared.logging.componentloggername import ComponentLoggerName
 from kiwii.shared.logging.logging import get_logger
 

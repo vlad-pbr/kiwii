@@ -9,7 +9,7 @@ from kiwii.architecture.server.api.shared.models import AuthenticationMethod
 from kiwii.architecture.server.api.shared.models import AuthorizationMetadata
 from kiwii.architecture.server.data.data import get_data_layer
 from kiwii.architecture.server.shared.models import Response
-from kiwii.data.data_structures.credentials import CredentialsDataStructure
+from kiwii.architecture.server.data.data_structures.credentials import CredentialsDataStructure
 
 AUTHORIZATION_PATTERN: re.Pattern = re.compile(r"^Basic (.*)$")
 ADMIN_CREDENTIALS: Optional[CredentialsDataStructure] = None

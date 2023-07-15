@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 from kiwii.shared.hash_utils import get_hash
-from .datastructure import DataStructure
+from kiwii.data.data_structures.datastructure import DataStructure
 
 
 @dataclass

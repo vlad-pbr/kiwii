@@ -1,4 +1,3 @@
-import json
 from http import HTTPStatus
 
 from kiwii.architecture.server.api import register
@@ -20,4 +19,4 @@ def status(_: RouteParams[StatusRouteParams]) -> Response:
     TODO implement
     """
 
-    return Response(status=HTTPStatus.OK, body=json.dumps({}))
+    return Response(status=HTTPStatus.NOT_IMPLEMENTED)
