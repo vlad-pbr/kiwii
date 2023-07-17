@@ -11,7 +11,7 @@ from kiwii.architecture.shared.models.user_credentials import UserCredentials
 from kiwii.architecture.server.parser.subparsers.start.consts import ARGUMENT_HOST, ARGUMENT_PORT, ARGUMENT_TLS_CERT, \
     ARGUMENT_TLS_KEY, ARGUMENT_LOG_LEVEL, ARGUMENT_DOC, ARGUMENT_USERNAME, ARGUMENT_PASSWORD
 from kiwii.architecture.server.shared.models import SSLCertChain, ServerAddress
-from kiwii.shared.argparse_utils import to_flag, parse_prog
+from kiwii.shared.argparse_utils import to_flag, parse_prog, evaluate_inclusivity, Inclusivity
 
 
 def parse(args: List[str], prog: Tuple):
@@ -39,23 +39,29 @@ def parse(args: List[str], prog: Tuple):
 
     # make sure that if one tls related argument is provided, both public and private keys are provided
     ssl_cert_chain: Optional[SSLCertChain] = None
-    if not bool(args_dict[ARGUMENT_TLS_CERT.dest]) == bool(args_dict[ARGUMENT_TLS_KEY.dest]):
-        parser.error(f"both {to_flag(ARGUMENT_TLS_CERT.dest)} and {to_flag(ARGUMENT_TLS_KEY.dest)} must be defined")
-    elif bool(args_dict[ARGUMENT_TLS_CERT.dest]):
-        ssl_cert_chain = SSLCertChain(
-            certfile=args_dict[ARGUMENT_TLS_CERT.dest],
-            keyfile=args_dict[ARGUMENT_TLS_KEY.dest]
-        )
+    match evaluate_inclusivity(args_dict, ARGUMENT_TLS_CERT, ARGUMENT_TLS_KEY):
+        case Inclusivity.NonInclusive:
+            parser.error(
+                f"both {to_flag(ARGUMENT_TLS_CERT.dest)} and {to_flag(ARGUMENT_TLS_KEY.dest)} must be defined"
+            )
+        case Inclusivity.InclusiveAndDefined:
+            ssl_cert_chain = SSLCertChain(
+                certfile=args_dict[ARGUMENT_TLS_CERT.dest],
+                keyfile=args_dict[ARGUMENT_TLS_KEY.dest]
+            )
 
     # make sure that if one user credentials related argument is provided, both username and password keys are provided
     credentials: Optional[UserCredentials] = None
-    if not bool(args_dict[ARGUMENT_USERNAME.dest]) == bool(args_dict[ARGUMENT_PASSWORD.dest]):
-        parser.error(f"both {to_flag(ARGUMENT_USERNAME.dest)} and {to_flag(ARGUMENT_PASSWORD.dest)} must be defined")
-    elif bool(args_dict[ARGUMENT_USERNAME.dest]):
-        credentials = UserCredentials(
-            username=args_dict[ARGUMENT_USERNAME.dest],
-            password=args_dict[ARGUMENT_PASSWORD.dest]
-        )
+    match evaluate_inclusivity(args_dict, ARGUMENT_USERNAME, ARGUMENT_PASSWORD):
+        case Inclusivity.NonInclusive:
+            parser.error(
+                f"both {to_flag(ARGUMENT_USERNAME.dest)} and {to_flag(ARGUMENT_PASSWORD.dest)} must be defined"
+            )
+        case Inclusivity.InclusiveAndDefined:
+            credentials = UserCredentials(
+                username=args_dict[ARGUMENT_USERNAME.dest],
+                password=args_dict[ARGUMENT_PASSWORD.dest]
+            )
 
     start(
         ServerAddress(host=args_dict[ARGUMENT_HOST.dest], port=args_dict[ARGUMENT_PORT.dest]),
