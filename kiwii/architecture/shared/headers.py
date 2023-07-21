@@ -1,5 +1,5 @@
 """
-Constants used across the API components (mostly routes).
+Common HTTP header constants.
 """
 
 HTTP_HEADER_LOCATION: str = "Location"

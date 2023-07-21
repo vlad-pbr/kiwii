@@ -5,7 +5,7 @@ Constants (mostly `argparse` related models) for the kiwii agent start CLI parse
 from logging import getLevelNamesMapping, INFO
 
 from kiwii.shared.argparse_utils import to_destination
-from kiwii.shared.models import Argument
+from kiwii.shared.models import Argument, StoreTrueArgument
 
 ARGUMENT_HOST = Argument(
     dest=to_destination("host"),
@@ -41,6 +41,11 @@ ARGUMENT_PASSWORD = Argument(
     required=False,
     choices=None,
     help="one time authentication password for registration with kiwii remote server"
+)
+
+ARGUMENT_RE_REGISTER = StoreTrueArgument(
+    dest=to_destination("re-register"),
+    help="perform re-registration with provided parameters in case agent is already registered with a server"
 )
 
 ARGUMENT_LOG_LEVEL = Argument(

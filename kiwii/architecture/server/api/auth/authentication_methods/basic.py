@@ -4,7 +4,7 @@ from typing import Optional
 
 from kiwii.architecture.server.api.auth import register
 from kiwii.architecture.server.api.auth.shared.models import AuthenticationHandlerParams
-from kiwii.architecture.server.api.shared.consts import HTTP_HEADER_AUTHORIZATION
+from kiwii.architecture.shared.headers import HTTP_HEADER_AUTHORIZATION
 from kiwii.architecture.server.api.shared.models import AuthenticationMethod
 from kiwii.architecture.server.api.shared.models import AuthorizationMetadata
 from kiwii.architecture.server.data.data import get_data_layer

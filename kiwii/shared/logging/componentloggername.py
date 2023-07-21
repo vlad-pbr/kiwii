@@ -9,3 +9,6 @@ class ComponentLoggerName(StrEnum):
 
     API = "api"
     API_AUTH = "api-auth"
+
+    AGENT = "agent"
+    AGENT_DATA = "agent-data"

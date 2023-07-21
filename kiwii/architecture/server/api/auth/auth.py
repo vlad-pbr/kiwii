@@ -110,7 +110,7 @@ def initialize(admin_credentials: Optional[UserCredentials], log_level: str) -> 
     # make sure that admin credentials were provided or already exist in persisted storage
     if admin_credentials:
         credentials_structure = CredentialsDataStructure.from_literal(
-            plaintext_credentials=admin_credentials.as_authorization_basic()
+            plaintext_credentials=admin_credentials.as_authorization_basic_string()
         )
         get_data_layer().store(credentials_structure)
     else:

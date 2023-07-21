@@ -1,3 +1,3 @@
 """
-Server data layer related models used in top level data structures
+Server data layer related models used in top level data structures.
 """

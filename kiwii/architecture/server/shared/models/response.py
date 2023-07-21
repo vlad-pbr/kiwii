@@ -5,7 +5,7 @@ from email.message import Message
 from http import HTTPStatus
 from typing import Optional, AnyStr
 
-from kiwii.architecture.server.api.shared.consts import HTTP_HEADER_LOCATION, HTTP_HEADER_CONTENT_TYPE
+from kiwii.architecture.shared.headers import HTTP_HEADER_LOCATION, HTTP_HEADER_CONTENT_TYPE
 from kiwii.architecture.server.api.shared.models.content_type import ContentType
 
 

@@ -1,3 +1,3 @@
 """
-Server data layer data structures
+Server data layer data structures.
 """

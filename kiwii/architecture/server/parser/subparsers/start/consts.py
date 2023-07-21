@@ -29,7 +29,7 @@ ARGUMENT_TLS_CERT = Argument(
     dest=to_destination("tls-cert"),
     type=str,
     default=None,
-    required=False,
+    required=True,
     choices=None,
     help="path to certificate public key in PEM format"
 )
@@ -38,7 +38,7 @@ ARGUMENT_TLS_KEY = Argument(
     dest=to_destination("tls-key"),
     type=str,
     default=None,
-    required=False,
+    required=True,
     choices=None,
     help="path to certificate private key in PEM format"
 )

@@ -11,9 +11,9 @@ from typing import Optional
 from kiwii.architecture.server.api import initialize as initialize_api
 from kiwii.architecture.server.api.auth import initialize as initialize_auth
 from kiwii.architecture.server.data.data import initialize as initialize_data
-from kiwii.architecture.shared.models.user_credentials import UserCredentials
+from kiwii.architecture.shared.models import ServerAddress, UserCredentials
 from kiwii.architecture.server.server.kiwii_http_request_handler import KiwiiHTTPRequestHandler
-from kiwii.architecture.server.shared.models import SSLCertChain, ServerAddress
+from kiwii.architecture.server.shared.models import SSLCertChain
 from kiwii.shared.logging.logging import get_logger
 from kiwii.shared.logging.componentloggername import ComponentLoggerName
 
@@ -22,7 +22,7 @@ logger = get_logger(ComponentLoggerName.SERVER)
 
 def start(
         server_address: ServerAddress,
-        ssl_cert_chain: Optional[SSLCertChain],
+        ssl_cert_chain: SSLCertChain,
         log_level: str,
         expose_doc: bool,
         credentials: Optional[UserCredentials]):
@@ -32,17 +32,12 @@ def start(
     logger.setLevel(log_level)
     logger.info(f"log level is set to '{log_level}'")
 
-    # prepare ssl context if cert chain was provided
-    ssl_context: Optional[SSLContext] = None
-    if ssl_cert_chain:
-
-        # validate paths for certificate keys
-        for _name, _path in asdict(ssl_cert_chain).items():
-            if not isfile(_path):
-                logger.critical(f"path specified for '{_name}' is not a file: {_path}")
-
-        ssl_context = SSLContext(PROTOCOL_TLS_SERVER)
-        ssl_context.load_cert_chain(**asdict(ssl_cert_chain))
+    # prepare ssl context
+    for _name, _path in asdict(ssl_cert_chain).items():
+        if not isfile(_path):
+            logger.critical(f"path specified for '{_name}' is not a file: {_path}")
+    ssl_context = SSLContext(PROTOCOL_TLS_SERVER)
+    ssl_context.load_cert_chain(**asdict(ssl_cert_chain))
 
     logger.info("initializing server data layer...")
     initialize_data("server.json", log_level)
@@ -54,17 +49,13 @@ def start(
     logger.info("initializing API and registering routes...")
     initialize_api(log_level, expose_doc)
 
-    with ThreadingHTTPServer(server_address, KiwiiHTTPRequestHandler) as server:
+    with ThreadingHTTPServer(server_address.as_tuple(), KiwiiHTTPRequestHandler) as server:
 
-        # apply ssl context if cert chain was provided
-        if ssl_context:
-            server.socket = ssl_context.wrap_socket(server.socket, server_side=True)
-        else:
-            logger.warning("TLS certificate was not provided, but is very much recommended")
-
-        logger.info(f"server started at {server_address} (TLS {'secure' if ssl_context else 'insecure'})")
+        # apply ssl context
+        server.socket = ssl_context.wrap_socket(server.socket, server_side=True)
 
         # start server
+        logger.info(f"server started at {server_address}")
         try:
             server.serve_forever()
         except KeyboardInterrupt as e:

@@ -7,10 +7,11 @@ from dataclasses import asdict
 from typing import List, Optional, Tuple
 
 from kiwii.architecture.server import start
+from kiwii.architecture.shared.models import ServerAddress
 from kiwii.architecture.shared.models.user_credentials import UserCredentials
 from kiwii.architecture.server.parser.subparsers.start.consts import ARGUMENT_HOST, ARGUMENT_PORT, ARGUMENT_TLS_CERT, \
     ARGUMENT_TLS_KEY, ARGUMENT_LOG_LEVEL, ARGUMENT_DOC, ARGUMENT_USERNAME, ARGUMENT_PASSWORD
-from kiwii.architecture.server.shared.models import SSLCertChain, ServerAddress
+from kiwii.architecture.server.shared.models import SSLCertChain
 from kiwii.shared.argparse_utils import to_flag, parse_prog, evaluate_inclusivity, Inclusivity
 
 
@@ -37,19 +38,6 @@ def parse(args: List[str], prog: Tuple):
     args = parser.parse_args(args)
     args_dict = vars(args)
 
-    # make sure that if one tls related argument is provided, both public and private keys are provided
-    ssl_cert_chain: Optional[SSLCertChain] = None
-    match evaluate_inclusivity(args_dict, ARGUMENT_TLS_CERT, ARGUMENT_TLS_KEY):
-        case Inclusivity.NonInclusive:
-            parser.error(
-                f"both {to_flag(ARGUMENT_TLS_CERT.dest)} and {to_flag(ARGUMENT_TLS_KEY.dest)} must be defined"
-            )
-        case Inclusivity.InclusiveAndDefined:
-            ssl_cert_chain = SSLCertChain(
-                certfile=args_dict[ARGUMENT_TLS_CERT.dest],
-                keyfile=args_dict[ARGUMENT_TLS_KEY.dest]
-            )
-
     # make sure that if one user credentials related argument is provided, both username and password keys are provided
     credentials: Optional[UserCredentials] = None
     match evaluate_inclusivity(args_dict, ARGUMENT_USERNAME, ARGUMENT_PASSWORD):
@@ -65,7 +53,10 @@ def parse(args: List[str], prog: Tuple):
 
     start(
         ServerAddress(host=args_dict[ARGUMENT_HOST.dest], port=args_dict[ARGUMENT_PORT.dest]),
-        ssl_cert_chain,
+        SSLCertChain(
+            certfile=args_dict[ARGUMENT_TLS_CERT.dest],
+            keyfile=args_dict[ARGUMENT_TLS_KEY.dest]
+        ),
         args_dict[ARGUMENT_LOG_LEVEL.dest],
         args_dict[ARGUMENT_DOC.dest],
         credentials
