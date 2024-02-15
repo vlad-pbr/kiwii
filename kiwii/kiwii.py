@@ -38,7 +38,3 @@ def cli():
     """Entrypoint for kiwii command line interface which simply calls `parse` with parameters."""
 
     parse(delegate_prog((), Path(__file__).stem), __doc__, __version__)
-
-
-if __name__ == "__main__":
-    cli()
