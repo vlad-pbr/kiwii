@@ -37,12 +37,17 @@ def parse(rsc_args: List[str], prog: Tuple):
     # make sure remote server connection arguments are inclusive
     remote_server_params: Optional[RemoteServerParams] = None
     rsc_args: List[Argument] = [ARGUMENT_HOST, ARGUMENT_PORT, ARGUMENT_USERNAME, ARGUMENT_PASSWORD]
-    match evaluate_inclusivity(args_dict, *rsc_args):
-        case Inclusivity.NonInclusive:
+    rsc_args_names: List[str] = ', '.join([to_flag(arg.dest) for arg in rsc_args])
+    match (evaluate_inclusivity(args_dict, *rsc_args), args_dict[ARGUMENT_RE_REGISTER.dest]):
+        case (Inclusivity.NonInclusive, _):
             parser.error(
-                f"none or all of the following arguments must be defined: {', '.join([arg.dest for arg in rsc_args])}"
+                f"none or all of the following arguments must be defined: {rsc_args_names}"
             )
-        case Inclusivity.InclusiveAndDefined:
+        case (Inclusivity.InclusiveAndUndefined, True):
+            parser.error(
+                f"'{to_flag(ARGUMENT_RE_REGISTER.dest)}' flag can only be provided when the following arguments are also defined: {rsc_args_names}"
+            )
+        case (Inclusivity.InclusiveAndDefined, _):
             remote_server_params = RemoteServerParams(
                 address=ServerAddress(
                     host=args_dict[ARGUMENT_HOST.dest],

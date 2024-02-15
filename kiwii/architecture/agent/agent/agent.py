@@ -3,6 +3,7 @@ Kiwii agent static class. Not actually a class as static classes are not pythoni
 """
 from http import HTTPMethod, HTTPStatus
 from http.client import HTTPSConnection, HTTPResponse, ResponseNotReady
+from ssl import SSLError
 from typing import Optional
 
 from kiwii.architecture.agent.data.data import initialize as initialize_data, get_data_layer
@@ -36,35 +37,15 @@ def register_with_remote_server(provided_server_params: Optional[RemoteServerPar
     except ConnectionError as e:
         logger.critical(f"could not connect to the remote server: {e}")
     except ResponseNotReady as e:
-        logger.critical(f"an unexpected HTTP client error has occurred: {e}")
+        logger.critical(f"an unexpected HTTP client error has occurred while connecting to the remote server: {e}")
+    except Exception as e:
+        logger.critical(f"an unexpected error has occurred while connecting to the remote server: {e}")
 
     # parse response
     if register_response.getcode() != HTTPStatus.CREATED:
-        logger.critical(f"received an error from remote server during registration: {register_response.reason}")
+        logger.critical(f"received an error from remote server during registration: {register_response.code} {register_response.reason}")
 
     # TODO store
-
-
-def resolve_remote_server_connection(provided_server_params: Optional[RemoteServerParams]) -> bool:
-    """
-    Resolves the following:
-    - If no parameters were provided, checks that the agent is already registered with a server and if so, returns True
-    - If parameters were provided (assuming re-registration is enabled), returns False
-    """
-
-    if get_data_layer().retrieve(RemoteServerStructure) is None:
-        if provided_server_params is None:
-            logger.critical("remote server parameters were not provided and do not exist in storage")
-        else:
-            return False
-    else:
-        if provided_server_params is None:
-            return True
-        else:
-            if provided_server_params.re_register:
-                return False
-            else:
-                logger.critical("agent is already registered with a server, use CLI to re-register")
 
 
 def start(
@@ -80,8 +61,20 @@ def start(
     logger.info("initializing agent data layer...")
     initialize_data("agent.json", log_level)
 
-    if not resolve_remote_server_connection(remote_server_params):
-        logger.info(f"registering with the remote server at {remote_server_params.address}...")
-        register_with_remote_server(remote_server_params)
-    else:
-        logger.info("using existing remote connection")
+    # handle server registration
+    existing_server_connection = get_data_layer().retrieve(RemoteServerStructure)
+    match (remote_server_params is not None, existing_server_connection is not None, remote_server_params is not None and remote_server_params.re_register is True):
+        case (True, True, True):
+            logger.info(f"re-registering with a new remote server at {remote_server_params.address}...")
+            register_with_remote_server(remote_server_params)
+        case (True, True, False):
+            logger.critical("agent is already registered with a server, use CLI to re-register")
+        case (True, False, True):
+            logger.critical("re-registration flag was provided, but the agent is not registered with any server")
+        case (True, False, _):
+            logger.info(f"registering with the remote server at {remote_server_params.address}...")
+            register_with_remote_server(remote_server_params)
+        case (False, True, _):
+            logger.info(f"using existing remote connection with {existing_server_connection.address}...")
+        case (False, False, _):
+            logger.critical("remote server parameters were not provided and do not exist in storage")
